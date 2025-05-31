@@ -1,16 +1,23 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImageZoneProps {
   onBack: () => void;
 }
 
 const ImageZone = ({ onBack }: ImageZoneProps) => {
+  const { user } = useAuth();
+  const { useSaveCreation } = useSupabaseData();
+  const { toast } = useToast();
+  const saveCreation = useSaveCreation();
+
   const [prompt, setPrompt] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('cartoon');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -33,38 +40,76 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
     "A treehouse in an enchanted forest 🏠🌳"
   ];
 
-  const mockImages = [
-    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop",
-    "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop",
-    "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=400&fit=crop",
-    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=400&fit=crop",
-    "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=400&h=400&fit=crop"
-  ];
-
-  const handleGenerateImage = () => {
-    // Use default values if nothing is entered
-    const finalPrompt = prompt.trim() || "A happy robot in a beautiful garden";
-    const finalStyle = selectedStyle || 'cartoon';
-
-    setIsGenerating(true);
-    
-    // Simulate API call (placeholder for Phase 3 GPT image 1 integration)
-    // System prompt will concatenate: selectedStyle + user prompt + child safety guidelines
-    setTimeout(() => {
-      const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
-      setGeneratedImage(randomImage);
-      setIsGenerating(false);
-      
-      // Mock save to creations (Phase 2 Supabase integration)
-      console.log('Saving image creation:', {
-        type: 'image',
-        prompt: finalPrompt,
-        style: finalStyle,
-        image_url: randomImage,
-        // Phase 3: Will include system prompt with safety guidelines
-        system_prompt: `Create a ${finalStyle} style image that is completely safe and appropriate for children aged 5-10. ${finalPrompt}`
+  const handleGenerateImage = async () => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to create images!",
+        variant: "destructive"
       });
-    }, 4000);
+      return;
+    }
+
+    const finalPrompt = prompt.trim() || "A happy robot in a beautiful garden";
+    
+    setIsGenerating(true);
+
+    try {
+      // Check usage limits first
+      const { data: usageData, error: usageError } = await supabase.functions.invoke('track-usage', {
+        body: { userId: user.id, actionType: 'image_generation' }
+      });
+
+      if (usageError || !usageData.canProceed) {
+        toast({
+          title: "Usage Limit Reached",
+          description: usageData?.message || "Please try again later",
+          variant: "destructive"
+        });
+        setIsGenerating(false);
+        return;
+      }
+
+      // Generate image with real AI
+      const { data: imageData, error: imageError } = await supabase.functions.invoke('generate-image', {
+        body: {
+          prompt: finalPrompt,
+          style: selectedStyle
+        }
+      });
+
+      if (imageError || !imageData.success) {
+        throw new Error(imageData?.error || 'Failed to generate image');
+      }
+
+      setGeneratedImage(imageData.imageUrl);
+
+      // Save to database
+      saveCreation.mutate({
+        type: 'image',
+        data: {
+          prompt: finalPrompt,
+          style: selectedStyle,
+          image_url: imageData.imageUrl,
+          system_prompt: `Create a ${selectedStyle} style image that is completely safe and appropriate for children aged 5-10. ${finalPrompt}`
+        }
+      });
+
+      toast({
+        title: "Image Created! 🎨",
+        description: `${usageData.remainingUses} creations left today`,
+      });
+
+    } catch (error) {
+      console.error('Image generation error:', error);
+      toast({
+        title: "Oops! Something went wrong",
+        description: "Try again with a different image idea!",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handlePromptSuggestion = (suggestion: string) => {
@@ -72,8 +117,12 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
   };
 
   const handleDownload = () => {
-    // Phase 3: Implement actual download functionality
-    console.log('Download feature - coming in Phase 3');
+    if (generatedImage) {
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.download = 'my-ai-artwork.png';
+      link.click();
+    }
   };
 
   return (
@@ -100,7 +149,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
           {/* Controls */}
           <Card className="p-6 bg-gradient-to-br from-green-100 to-blue-100 border-0 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-              🖼️ Image Creator 🖼️
+              🖼️ AI Image Creator 🖼️
             </h2>
             
             <div className="space-y-6">
@@ -149,7 +198,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                     <span>Creating Art... 🎨</span>
                   </div>
                 ) : (
-                  'Generate My Image! 🖼️'
+                  'Generate My Image with AI! 🖼️'
                 )}
               </Button>
             </div>
@@ -158,7 +207,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
           {/* Generated Image Display */}
           <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-              🖼️ Your Artwork 🖼️
+              🖼️ Your AI Artwork 🖼️
             </h2>
 
             {generatedImage ? (
@@ -166,7 +215,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 <div className="relative">
                   <img
                     src={generatedImage}
-                    alt="Generated artwork"
+                    alt="AI Generated artwork"
                     className="w-full h-64 object-cover rounded-xl shadow-lg"
                   />
                   <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
@@ -175,9 +224,10 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 </div>
                 
                 <div className="bg-white rounded-xl p-4 space-y-3">
-                  <h3 className="font-bold text-gray-800">Your Creation:</h3>
+                  <h3 className="font-bold text-gray-800">Your AI Creation:</h3>
                   <p className="text-sm text-gray-600 italic">"{prompt || 'A happy robot in a beautiful garden'}"</p>
                   <p className="text-sm text-gray-500">Style: {selectedStyle}</p>
+                  <p className="text-xs text-green-600">✨ Created with real AI magic!</p>
                 </div>
 
                 <div className="flex space-x-3">
@@ -193,7 +243,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
-                    🔄 Try Again
+                    🔄 Create New
                   </Button>
                 </div>
               </div>
@@ -204,10 +254,10 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                   Describe what you want to create!
                 </p>
                 <p className="text-sm text-gray-500">
-                  Your beautiful artwork will appear here! ✨
+                  Your beautiful AI artwork will appear here! ✨
                 </p>
                 <p className="text-xs text-gray-400">
-                  Tip: You can click generate without typing anything to try our default example!
+                  Powered by real AI - each image is unique!
                 </p>
               </div>
             )}

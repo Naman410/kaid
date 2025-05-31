@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, MessageCircle } from 'lucide-react';
+import { X } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -14,6 +17,9 @@ interface Message {
 }
 
 const FloatingDIAChat = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -24,6 +30,7 @@ const FloatingDIAChat = () => {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const conversationStarters = [
     "What is AI? 🤔",
@@ -33,9 +40,9 @@ const FloatingDIAChat = () => {
     "What can AI do? ✨"
   ];
 
-  const handleSendMessage = (message?: string) => {
+  const handleSendMessage = async (message?: string) => {
     const messageToSend = message || inputMessage.trim();
-    if (!messageToSend) return;
+    if (!messageToSend || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
@@ -47,37 +54,60 @@ const FloatingDIAChat = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
+    setIsLoading(true);
 
-    // Simulate D.I.A. response (placeholder for Phase 3 GPT integration)
-    setTimeout(() => {
+    try {
+      // Get conversation history for context
+      const conversationHistory = messages.slice(-6).map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+
+      // Call D.I.A. AI function
+      const { data: diaData, error: diaError } = await supabase.functions.invoke('dia-chat', {
+        body: {
+          message: messageToSend,
+          conversationHistory
+        }
+      });
+
+      if (diaError || !diaData.success) {
+        throw new Error(diaData?.error || 'Failed to get D.I.A. response');
+      }
+
+      // Add D.I.A. response
       const diaResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'dia',
-        content: getDIAResponse(messageToSend),
+        content: diaData.response,
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, diaResponse]);
-    }, 1000);
-  };
 
-  const getDIAResponse = (userMessage: string): string => {
-    // Placeholder responses for MVP (will be replaced with GPT in Phase 3)
-    const responses = {
-      "what is ai": "AI stands for Artificial Intelligence! It's like teaching computers to think and learn, just like how you learn new things every day! 🧠✨",
-      "how do computers learn": "Computers learn by looking at lots of examples, just like how you learn to recognize animals by seeing many different cats and dogs! 🐱🐶",
-      "can you help me create": "Absolutely! I love helping create amazing things! You can make music in the Sound Cave, draw pictures in the Art Studio, or write stories in the Story Treehouse! 🎨🎵📚",
-      "tell me a fun fact": "Here's a cool fact: Some AI can recognize your voice just like how you recognize your friend's voice on the phone! Isn't that amazing? 🎤🤖",
-      "what can ai do": "AI can do so many wonderful things! It can help doctors, create art, play games, translate languages, and even help you learn new things! The possibilities are endless! 🌟"
-    };
+    } catch (error) {
+      console.error('D.I.A. chat error:', error);
+      
+      // Fallback response
+      const fallbackResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'dia',
+        content: "Oops! I'm having trouble connecting right now. But I'm still here to help! Try asking me something about AI and creativity! 🤖✨",
+        timestamp: new Date()
+      };
 
-    const lowerMessage = userMessage.toLowerCase();
-    for (const [key, response] of Object.entries(responses)) {
-      if (lowerMessage.includes(key.replace(/ /g, '')) || lowerMessage.includes(key)) {
-        return response;
+      setMessages(prev => [...prev, fallbackResponse]);
+      
+      if (user) {
+        toast({
+          title: "Connection issue",
+          description: "D.I.A. is having trouble connecting, but you can still chat!",
+          variant: "destructive"
+        });
       }
+    } finally {
+      setIsLoading(false);
     }
-
-    return "That's a great question! 🤔 I'm still learning too. Why don't we explore the Creative Zones together to discover more about AI? You might find the answer while creating something amazing! ✨";
   };
 
   return (
@@ -103,7 +133,7 @@ const FloatingDIAChat = () => {
                 <div className="text-4xl">🤖</div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">Chat with D.I.A.</h2>
-                  <p className="text-gray-600">Your friendly AI companion</p>
+                  <p className="text-gray-600">Your AI-powered companion</p>
                 </div>
               </div>
               <Button
@@ -141,6 +171,22 @@ const FloatingDIAChat = () => {
                     </div>
                   </div>
                 ))}
+                
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-gray-800 px-4 py-3 rounded-2xl">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">🤖</span>
+                        <span className="font-bold text-sm">D.I.A.</span>
+                      </div>
+                      <div className="flex items-center space-x-1 mt-2">
+                        <div className="animate-bounce h-2 w-2 bg-gray-500 rounded-full"></div>
+                        <div className="animate-bounce h-2 w-2 bg-gray-500 rounded-full" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="animate-bounce h-2 w-2 bg-gray-500 rounded-full" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
 
@@ -155,6 +201,7 @@ const FloatingDIAChat = () => {
                     variant="outline"
                     size="sm"
                     className="rounded-full text-xs hover:bg-purple-100"
+                    disabled={isLoading}
                   >
                     {starter}
                   </Button>
@@ -169,15 +216,20 @@ const FloatingDIAChat = () => {
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Type your question here..."
                   className="rounded-xl border-purple-200 focus:border-purple-400"
+                  disabled={isLoading}
                 />
                 <Button
                   onClick={() => handleSendMessage()}
-                  disabled={!inputMessage.trim()}
+                  disabled={!inputMessage.trim() || isLoading}
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-6"
                 >
                   Send! 📤
                 </Button>
               </div>
+              
+              <p className="text-xs text-gray-400 text-center mt-2">
+                ✨ Powered by real AI - D.I.A. learns and grows with every chat!
+              </p>
             </div>
           </Card>
         </div>

@@ -1,10 +1,13 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useToast } from '@/hooks/use-toast';
 
 interface StoryTreehouseProps {
   onBack: () => void;
@@ -18,6 +21,11 @@ interface StoryPart {
 }
 
 const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
+  const { user } = useAuth();
+  const { useSaveCreation } = useSupabaseData();
+  const { toast } = useToast();
+  const saveCreation = useSaveCreation();
+
   const [storyTitle, setStoryTitle] = useState('');
   const [storyGenre, setStoryGenre] = useState('adventure');
   const [storyLength, setStoryLength] = useState('short');
@@ -48,60 +56,87 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
     "In a world where children could fly with special wings..."
   ];
 
-  const mockIllustrations = [
-    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=300&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=300&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=300&h=200&fit=crop"
-  ];
+  const handleAddStoryPart = async () => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to create stories!",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const handleAddStoryPart = () => {
     const finalInput = currentInput.trim() || "A magical adventure begins";
     
     setIsGenerating(true);
 
-    // Phase 3: Two API calls needed - ChatGPT for story, GPT image 1 for illustration
-    setTimeout(() => {
-      const aiContinuation = generateAIContinuation(finalInput);
-      const randomIllustration = mockIllustrations[Math.floor(Math.random() * mockIllustrations.length)];
+    try {
+      // Check usage limits first
+      const { data: usageData, error: usageError } = await supabase.functions.invoke('track-usage', {
+        body: { userId: user.id, actionType: 'story_generation' }
+      });
+
+      if (usageError || !usageData.canProceed) {
+        toast({
+          title: "Usage Limit Reached",
+          description: usageData?.message || "Please try again later",
+          variant: "destructive"
+        });
+        setIsGenerating(false);
+        return;
+      }
+
+      // Generate story with real AI
+      const { data: storyData, error: storyError } = await supabase.functions.invoke('generate-story', {
+        body: {
+          prompt: storyParts.map(part => part.text).join(' '),
+          genre: storyGenre,
+          length: storyLength,
+          userInput: finalInput
+        }
+      });
+
+      if (storyError || !storyData.success) {
+        throw new Error(storyData?.error || 'Failed to generate story');
+      }
 
       const newPart: StoryPart = {
         id: Date.now().toString(),
-        text: `${finalInput} ${aiContinuation}`,
-        illustration: randomIllustration,
+        text: `${finalInput}\n\n${storyData.story}`,
         timestamp: new Date()
       };
 
       setStoryParts(prev => [...prev, newPart]);
       setCurrentInput('');
-      setIsGenerating(false);
 
-      // Mock save to creations (Phase 2 Supabase integration)
-      console.log('Saving story part:', {
+      // Save to database
+      saveCreation.mutate({
         type: 'story',
-        genre: storyGenre,
-        length: storyLength,
-        user_input: finalInput,
-        ai_continuation: aiContinuation,
-        // Phase 3: System prompts for ChatGPT and GPT image 1
-        story_system_prompt: `Write a ${storyLength} ${storyGenre} story appropriate for children aged 5-10. Maximum ${storyLengths.find(l => l.value === storyLength)?.chars} characters.`,
-        image_system_prompt: `Create a child-friendly illustration for this story scene: ${finalInput}`
+        data: {
+          title: storyTitle || 'My Amazing Story',
+          genre: storyGenre,
+          length: storyLength,
+          parts: [...storyParts, newPart],
+          user_input: finalInput,
+          ai_generated: storyData.story
+        }
       });
-    }, 2500);
-  };
 
-  const generateAIContinuation = (userInput: string): string => {
-    // Placeholder AI responses (will be replaced with ChatGPT in Phase 3)
-    const continuations = [
-      "Suddenly, a friendly dragon appeared with sparkling scales that shimmered in the sunlight! 🐉✨",
-      "The magical door opened to reveal a garden where flowers sang beautiful songs! 🌺🎵",
-      "A wise owl flew down and whispered a secret that would change everything! 🦉💫",
-      "The ground began to glow with rainbow colors, leading the way to an amazing discovery! 🌈✨",
-      "A gentle breeze carried the sound of laughter from somewhere beyond the misty mountains! 🌬️😊"
-    ];
+      toast({
+        title: "Story Created! ✨",
+        description: `${usageData.remainingUses} creations left today`,
+      });
 
-    return continuations[Math.floor(Math.random() * continuations.length)];
+    } catch (error) {
+      console.error('Story generation error:', error);
+      toast({
+        title: "Oops! Something went wrong",
+        description: "Try again with a different story idea!",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const startNewStory = () => {
@@ -115,8 +150,7 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
   };
 
   const handleDownload = () => {
-    // Phase 3: Implement actual download functionality
-    console.log('Download story feature - coming in Phase 3');
+    console.log('Download story feature - coming soon!');
   };
 
   return (
@@ -259,7 +293,7 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
                   )}
                   
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
-                    <p className="text-gray-800 leading-relaxed text-lg">{part.text}</p>
+                    <p className="text-gray-800 leading-relaxed text-lg whitespace-pre-wrap">{part.text}</p>
                   </div>
                 </div>
               ))}
@@ -293,15 +327,15 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
               {isGenerating ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                  <span>Writing Magic... ✨</span>
+                  <span>Creating Magic... ✨</span>
                 </div>
               ) : (
-                'Continue Story! 📖'
+                'Continue Story with AI! 📖'
               )}
             </Button>
             
             <p className="text-xs text-gray-400 text-center">
-              Tip: You can click continue without typing anything to try our default example!
+              Powered by real AI! Each story is unique and created just for you! ✨
             </p>
           </div>
         </Card>
