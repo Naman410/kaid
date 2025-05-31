@@ -33,11 +33,12 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
+        model: 'gpt-image-1',
         prompt: safePrompt,
         n: 1,
         size: '1024x1024',
-        quality: 'standard',
+        quality: 'low',
+        response_format: 'b64_json'
       }),
     });
 
@@ -47,7 +48,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const imageUrl = data.data[0].url;
+    const imageBase64 = data.data[0].b64_json;
+    const imageUrl = `data:image/png;base64,${imageBase64}`;
 
     console.log('Image generated successfully');
 

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -76,6 +75,24 @@ export const useSupabaseData = () => {
     });
   };
 
+  // Fetch user's music creations
+  const useUserMusicCreations = () => {
+    return useQuery({
+      queryKey: ['user-music-creations', user?.id],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('music_creations')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!user?.id,
+    });
+  };
+
   // Save creation mutation
   const useSaveCreation = () => {
     return useMutation({
@@ -117,6 +134,34 @@ export const useSupabaseData = () => {
     });
   };
 
+  // Generate music mutation
+  const useGenerateMusic = () => {
+    return useMutation({
+      mutationFn: async ({ prompt, style, title, instrumental }: { 
+        prompt: string; 
+        style: string; 
+        title: string; 
+        instrumental: boolean; 
+      }) => {
+        const { data, error } = await supabase.functions.invoke('generate-music', {
+          body: {
+            prompt,
+            style,
+            title,
+            instrumental,
+            userId: user?.id
+          }
+        });
+        
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user-music-creations'] });
+      },
+    });
+  };
+
   return {
     useLearningTracks,
     useLessons,
@@ -124,5 +169,7 @@ export const useSupabaseData = () => {
     useUserCreations,
     useSaveCreation,
     useUpdateProgress,
+    useUserMusicCreations,
+    useGenerateMusic,
   };
 };

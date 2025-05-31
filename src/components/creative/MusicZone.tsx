@@ -1,24 +1,44 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface MusicZoneProps {
   onBack: () => void;
 }
 
 const MusicZone = ({ onBack }: MusicZoneProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { useGenerateMusic, useUserMusicCreations } = useSupabaseData();
+  const generateMusicMutation = useGenerateMusic();
+  const { data: musicCreations, refetch: refetchMusic } = useUserMusicCreations();
+
   const [selectedGenre, setSelectedGenre] = useState('happy');
   const [selectedMood, setSelectedMood] = useState('play');
   const [userPrompt, setUserPrompt] = useState('');
   const [musicName, setMusicName] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState<string | null>(null);
+  const [instrumental, setInstrumental] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState<any>(null);
 
-  // Default values pre-selected
+  // Poll for music creation updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (musicCreations?.some(creation => creation.status === 'pending' || creation.status === 'processing')) {
+        refetchMusic();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [musicCreations, refetchMusic]);
+
   const genres = [
     { value: 'happy', label: '😊 Happy & Upbeat' },
     { value: 'calm', label: '😌 Calm & Peaceful' },
@@ -35,14 +55,6 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
     { value: 'party', label: '🎉 Party Mode' }
   ];
 
-  const mockTracks = [
-    "🎵 Sunny Day Adventure",
-    "🎶 Magical Forest Dance", 
-    "🎼 Robot's Lullaby",
-    "🎹 Space Explorer Theme",
-    "🥁 Happy Playground Beat"
-  ];
-
   const generateRandomName = () => {
     const adjectives = ['Happy', 'Magical', 'Sunny', 'Dancing', 'Dreamy', 'Bouncy', 'Sparkly'];
     const nouns = ['Adventure', 'Song', 'Melody', 'Beat', 'Tune', 'Rhythm', 'Music'];
@@ -51,40 +63,62 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
     return `${randomAdj} ${randomNoun}`;
   };
 
-  const handleGenerateMusic = () => {
+  const handleGenerateMusic = async () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to create music",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const finalPrompt = userPrompt.trim() || "Create a fun and happy tune";
     const finalName = musicName.trim() || generateRandomName();
 
-    setIsGenerating(true);
-    
-    // Phase 3: SUNO AI integration with concatenated system prompt
-    // System prompt will include: selectedGenre + selectedMood + userPrompt + child safety guidelines
-    setTimeout(() => {
-      const randomTrack = mockTracks[Math.floor(Math.random() * mockTracks.length)];
-      setCurrentTrack(finalName);
-      setIsGenerating(false);
-      
-      // Mock save to creations (Phase 2 Supabase integration)
-      console.log('Saving music creation:', {
-        type: 'music',
-        genre: selectedGenre,
-        mood: selectedMood,
-        user_prompt: finalPrompt,
-        track_name: finalName,
-        // Phase 3: Complete system prompt for SUNO AI
-        system_prompt: `Create a ${selectedGenre} style music with ${selectedMood} mood. ${finalPrompt}. Ensure content is appropriate for children aged 5-10.`
+    try {
+      await generateMusicMutation.mutateAsync({
+        prompt: `${finalPrompt} with ${selectedGenre} style and ${selectedMood} mood`,
+        style: selectedGenre,
+        title: finalName,
+        instrumental: instrumental
       });
-    }, 3000);
+
+      toast({
+        title: "Music generation started!",
+        description: "Your music is being created. This may take a few minutes.",
+      });
+
+      // Clear form
+      setUserPrompt('');
+      setMusicName('');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start music generation",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDownload = () => {
-    // Phase 3: Implement actual download functionality
-    console.log('Download music feature - coming in Phase 3');
+  const handleDownload = (audioUrl: string, title: string) => {
+    const link = document.createElement('a');
+    link.href = audioUrl;
+    link.download = `${title}.mp3`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleQuickSound = (soundType: string) => {
-    // Phase 3: Fetch pre-fed sounds from database
-    console.log(`Playing quick sound: ${soundType}`);
+  const getStatusMessage = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Waiting in queue... 🎵';
+      case 'processing': return 'Creating your music... 🎶';
+      case 'completed': return 'Ready to play! 🎸';
+      case 'failed': return 'Generation failed 😔';
+      default: return 'Processing... 🎼';
+    }
   };
 
   return (
@@ -188,24 +222,30 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
                 </div>
               </div>
 
+              <div className="flex items-center space-x-3">
+                <Switch
+                  checked={instrumental}
+                  onCheckedChange={setInstrumental}
+                />
+                <label className="text-lg font-semibold text-gray-700">
+                  Instrumental only (no lyrics)
+                </label>
+              </div>
+
               <Button
                 onClick={handleGenerateMusic}
-                disabled={isGenerating}
+                disabled={generateMusicMutation.isPending}
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
               >
-                {isGenerating ? (
+                {generateMusicMutation.isPending ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Creating Magic... 🎵</span>
+                    <span>Starting Creation... 🎵</span>
                   </div>
                 ) : (
                   'Create My Music! 🎶'
                 )}
               </Button>
-              
-              <p className="text-xs text-gray-400 text-center">
-                Tip: You can use default settings and click create right away!
-              </p>
             </div>
           </Card>
 
@@ -215,43 +255,30 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
               🎧 Music Player 🎧
             </h2>
 
-            {currentTrack ? (
+            {currentTrack && currentTrack.status === 'completed' ? (
               <div className="space-y-6">
                 <div className="text-center">
                   <div className="text-6xl mb-4">🎵</div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2">
                     Now Playing:
                   </h3>
-                  <p className="text-lg text-gray-600">{currentTrack}</p>
+                  <p className="text-lg text-gray-600">{currentTrack.title}</p>
                 </div>
 
-                {/* Mock Player Controls */}
+                {/* Real Audio Player */}
                 <div className="bg-white rounded-xl p-4 shadow-inner">
-                  <div className="flex items-center justify-center space-x-4 mb-4">
-                    <Button variant="outline" size="lg" className="rounded-full">
-                      ⏮️
-                    </Button>
-                    <Button size="lg" className="rounded-full bg-purple-500 hover:bg-purple-600">
-                      ▶️
-                    </Button>
-                    <Button variant="outline" size="lg" className="rounded-full">
-                      ⏭️
-                    </Button>
-                  </div>
-                  
-                  {/* Mock Progress Bar */}
-                  <div className="bg-gray-200 rounded-full h-3 mb-2">
-                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full w-1/3"></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>0:45</span>
-                    <span>2:30</span>
-                  </div>
+                  <audio 
+                    controls 
+                    className="w-full mb-4"
+                    src={currentTrack.audio_url}
+                  >
+                    Your browser does not support the audio element.
+                  </audio>
                 </div>
 
                 <div className="flex space-x-3">
                   <Button 
-                    onClick={handleDownload}
+                    onClick={() => handleDownload(currentTrack.audio_url, currentTrack.title)}
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
@@ -270,42 +297,46 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
               <div className="text-center space-y-4 py-12">
                 <div className="text-6xl">🎼</div>
                 <p className="text-lg text-gray-600">
-                  Choose your style and mood, then hit create!
-                </p>
-                <p className="text-sm text-gray-500">
-                  Your amazing music will appear here! 🎶
-                </p>
-                <p className="text-xs text-gray-400">
-                  Tip: You can use the default settings and create right away!
+                  Your music creations will appear here!
                 </p>
               </div>
             )}
           </Card>
         </div>
 
-        {/* Quick Sounds */}
-        <Card className="p-6 bg-gradient-to-r from-cyan-100 to-blue-100 border-0 rounded-2xl shadow-lg">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-            🎹 Quick Sounds 🎹
-          </h2>
-          <p className="text-center text-gray-600 mb-6">
-            Tap these buttons to play fun sounds!
-          </p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['🥁 Drum', '🎺 Trumpet', '🎸 Guitar', '🎹 Piano', '🎷 Sax', '🎻 Violin', '🔔 Bell', '🎵 Melody'].map((sound) => (
-              <Button
-                key={sound}
-                variant="outline"
-                className="p-4 h-auto flex flex-col space-y-2 rounded-xl bg-white hover:bg-blue-50 transform hover:scale-105 transition-all duration-200"
-                onClick={() => handleQuickSound(sound)}
-              >
-                <span className="text-2xl">{sound.split(' ')[0]}</span>
-                <span className="text-sm font-medium">{sound.split(' ')[1]}</span>
-              </Button>
-            ))}
-          </div>
-        </Card>
+        {/* Recent Creations */}
+        {musicCreations && musicCreations.length > 0 && (
+          <Card className="p-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-0 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              🎵 Your Music Library 🎵
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {musicCreations.map((creation) => (
+                <div
+                  key={creation.id}
+                  className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => creation.status === 'completed' && setCurrentTrack(creation)}
+                >
+                  <h3 className="font-bold text-lg mb-2">{creation.title}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{creation.prompt}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      {creation.instrumental ? '🎹 Instrumental' : '🎤 With Lyrics'}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      creation.status === 'completed' ? 'bg-green-100 text-green-700' :
+                      creation.status === 'failed' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {getStatusMessage(creation.status)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

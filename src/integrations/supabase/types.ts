@@ -133,6 +133,48 @@ export type Database = {
           },
         ]
       }
+      music_creations: {
+        Row: {
+          audio_url: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          instrumental: boolean
+          prompt: string
+          status: string
+          style: string | null
+          task_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          instrumental?: boolean
+          prompt: string
+          status?: string
+          style?: string | null
+          task_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          instrumental?: boolean
+          prompt?: string
+          status?: string
+          style?: string | null
+          task_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string
