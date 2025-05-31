@@ -1,1 +1,85 @@
+
+# A string used to distinguish different Supabase projects on the same host. Defaults to the
+# working directory name when running `supabase init`.
 project_id = "dkmdtuwtvuvekzjyopaj"
+
+[api]
+enabled = true
+# Port to use for the API URL.
+port = 54321
+# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
+# endpoints. public and storage are always included.
+schemas = ["public", "storage", "graphql_public"]
+# Extra schemas to add to the search_path of every request. public is always included.
+extra_search_path = ["public", "extensions"]
+# The maximum number of rows returns from a table or view. Limits payload size
+# for accidental or malicious requests.
+max_rows = 1000
+
+[auth]
+enabled = true
+# The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
+# in emails.
+site_url = "http://localhost:3000"
+# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+additional_redirect_urls = ["https://dkmdtuwtvuvekzjyopaj.supabase.co/auth/v1/callback"]
+# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604800 (1 week).
+jwt_expiry = 3600
+# If disabled, the refresh token will never expire.
+enable_refresh_token_rotation = true
+# Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
+# Requires enable_refresh_token_rotation = true.
+refresh_token_reuse_interval = 10
+# Allow/disallow new user signups to your project.
+enable_signup = true
+
+[auth.email]
+# Allow/disallow new user signups via email to your project.
+enable_signup = true
+# If enabled, a user will be required to confirm any email change on both the old, and new email
+# addresses. If disabled, only the new email is required to confirm.
+double_confirm_changes = true
+# If enabled, users need to confirm their email address before signing in.
+enable_confirmations = false
+
+# Use pre-defined map of claims
+[auth.jwt]
+default_group_name = ""
+admin_group_name = ""
+namespace = ""
+
+# Allow/disallow anonymous sign-ins to your project.
+[auth.anonymous]
+enabled = false
+
+[edge_runtime]
+enabled = true
+# Configure one of the supported pools. Each pool can encrypt sensitive data using a different
+# provider. Sensitive data includes cookies, session keys, and other forms of PII.
+inspector_port = 8083
+# Configures storage backend used for database functions. Supported values: ephemeral, s3, gcs, azure.
+policy = "per_worker"
+[edge_runtime.ip_version]
+policy = "ipv4_only"
+
+# Configure logs
+[analytics]
+enabled = false
+
+[functions.suno-callback]
+verify_jwt = false
+
+[functions.generate-music]
+verify_jwt = true
+
+[functions.generate-image]
+verify_jwt = true
+
+[functions.dia-chat]
+verify_jwt = true
+
+[functions.generate-story]
+verify_jwt = true
+
+[functions.track-usage]
+verify_jwt = true
