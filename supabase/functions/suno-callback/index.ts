@@ -16,38 +16,81 @@ serve(async (req) => {
   try {
     const callbackData = await req.json();
     
-    console.log('SUNO callback received:', callbackData);
+    console.log('SUNO callback received:', JSON.stringify(callbackData, null, 2));
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { taskId, status, audio_url } = callbackData;
-
-    // Update the music creation record
-    const updateData: any = {
-      status: status === 'complete' ? 'completed' : status,
-      completed_at: status === 'complete' ? new Date().toISOString() : null
-    };
-
-    if (audio_url) {
-      updateData.audio_url = audio_url;
+    // Parse the nested structure: callbackData.data.data contains the track array
+    const responseData = callbackData.data;
+    const taskId = responseData.task_id;
+    const tracks = responseData.data || [];
+    
+    if (!taskId) {
+      throw new Error('No task_id found in callback data');
     }
 
+    // Use the first track as specified
+    const firstTrack = tracks[0];
+    
+    let updateData: any = {
+      status: callbackData.data.callbackType === 'complete' ? 'completed' : 'processing',
+      completed_at: callbackData.data.callbackType === 'complete' ? new Date().toISOString() : null
+    };
+
+    // If we have track data, extract the enhanced information
+    if (firstTrack) {
+      if (firstTrack.audio_url) {
+        updateData.audio_url = firstTrack.audio_url;
+      }
+      
+      if (firstTrack.image_url) {
+        updateData.image_url = firstTrack.image_url;
+      }
+      
+      if (firstTrack.duration) {
+        updateData.duration = firstTrack.duration;
+      }
+      
+      if (firstTrack.tags) {
+        updateData.tags = firstTrack.tags;
+      }
+      
+      if (firstTrack.id) {
+        updateData.suno_track_id = firstTrack.id;
+      }
+
+      console.log('Extracted track data:', {
+        audio_url: firstTrack.audio_url,
+        image_url: firstTrack.image_url,
+        duration: firstTrack.duration,
+        tags: firstTrack.tags,
+        suno_track_id: firstTrack.id
+      });
+    }
+
+    // Update the music creation record
     const { error: updateError } = await supabase
       .from('music_creations')
       .update(updateData)
       .eq('task_id', taskId);
 
     if (updateError) {
+      console.error('Database update error:', updateError);
       throw new Error('Failed to update music creation record');
     }
 
-    console.log('Music creation updated successfully');
+    console.log('Music creation updated successfully with enhanced data');
 
     return new Response(JSON.stringify({ 
       success: true,
-      message: 'Callback processed successfully'
+      message: 'Callback processed successfully',
+      trackData: firstTrack ? {
+        audio_url: firstTrack.audio_url,
+        image_url: firstTrack.image_url,
+        duration: firstTrack.duration
+      } : null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

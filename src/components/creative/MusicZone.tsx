@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Download, Play, Pause, Volume2 } from 'lucide-react';
 
 interface MusicZoneProps {
   onBack: () => void;
@@ -27,6 +28,8 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
   const [musicName, setMusicName] = useState('');
   const [instrumental, setInstrumental] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
   // Poll for music creation updates
   useEffect(() => {
@@ -38,6 +41,17 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
 
     return () => clearInterval(interval);
   }, [musicCreations, refetchMusic]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        setCurrentAudio(null);
+        setIsPlaying(false);
+      }
+    };
+  }, [currentAudio]);
 
   const genres = [
     { value: 'happy', label: '😊 Happy & Upbeat' },
@@ -101,14 +115,59 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
     }
   };
 
-  const handleDownload = (audioUrl: string, title: string) => {
+  const handlePlayPause = (track: any) => {
+    if (!track.audio_url) return;
+
+    if (currentAudio && currentTrack?.id === track.id) {
+      if (isPlaying) {
+        currentAudio.pause();
+        setIsPlaying(false);
+      } else {
+        currentAudio.play();
+        setIsPlaying(true);
+      }
+    } else {
+      if (currentAudio) {
+        currentAudio.pause();
+      }
+      
+      const audio = new Audio(track.audio_url);
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+        setCurrentAudio(null);
+      });
+      
+      audio.addEventListener('error', () => {
+        toast({
+          title: "Error",
+          description: "Failed to load audio",
+          variant: "destructive"
+        });
+        setIsPlaying(false);
+        setCurrentAudio(null);
+      });
+
+      setCurrentAudio(audio);
+      setCurrentTrack(track);
+      setIsPlaying(true);
+      audio.play();
+    }
+  };
+
+  const handleDownload = (url: string, filename: string) => {
     const link = document.createElement('a');
-    link.href = audioUrl;
-    link.download = `${title}.mp3`;
+    link.href = url;
+    link.download = filename;
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getStatusMessage = (status: string) => {
@@ -249,7 +308,7 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
             </div>
           </Card>
 
-          {/* Player */}
+          {/* Enhanced Player */}
           <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
               🎧 Music Player 🎧
@@ -257,39 +316,90 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
 
             {currentTrack && currentTrack.status === 'completed' ? (
               <div className="space-y-6">
+                {/* Album Art and Track Info */}
                 <div className="text-center">
-                  <div className="text-6xl mb-4">🎵</div>
+                  {currentTrack.image_url ? (
+                    <img 
+                      src={currentTrack.image_url} 
+                      alt={currentTrack.title}
+                      className="w-48 h-48 mx-auto rounded-2xl shadow-lg object-cover mb-4"
+                    />
+                  ) : (
+                    <div className="w-48 h-48 mx-auto bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl shadow-lg flex items-center justify-center mb-4">
+                      <span className="text-6xl">🎵</span>
+                    </div>
+                  )}
+                  
                   <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    Now Playing:
+                    {currentTrack.title}
                   </h3>
-                  <p className="text-lg text-gray-600">{currentTrack.title}</p>
+                  
+                  {currentTrack.duration && (
+                    <p className="text-sm text-gray-600 mb-2">
+                      Duration: {formatDuration(currentTrack.duration)}
+                    </p>
+                  )}
+                  
+                  {currentTrack.tags && (
+                    <p className="text-xs text-gray-500 mb-4">
+                      {currentTrack.tags}
+                    </p>
+                  )}
                 </div>
 
-                {/* Real Audio Player */}
+                {/* Enhanced Controls */}
                 <div className="bg-white rounded-xl p-4 shadow-inner">
+                  <div className="flex items-center justify-center space-x-4 mb-4">
+                    <Button
+                      onClick={() => handlePlayPause(currentTrack)}
+                      variant="outline"
+                      size="lg"
+                      className="rounded-full w-16 h-16"
+                    >
+                      {isPlaying && currentTrack?.id === currentTrack.id ? 
+                        <Pause className="w-8 h-8" /> : 
+                        <Play className="w-8 h-8 ml-1" />
+                      }
+                    </Button>
+                  </div>
+                  
                   <audio 
                     controls 
-                    className="w-full mb-4"
+                    className="w-full"
                     src={currentTrack.audio_url}
                   >
                     Your browser does not support the audio element.
                   </audio>
                 </div>
 
+                {/* Download Options */}
                 <div className="flex space-x-3">
                   <Button 
-                    onClick={() => handleDownload(currentTrack.audio_url, currentTrack.title)}
+                    onClick={() => handleDownload(currentTrack.audio_url, `${currentTrack.title}.mp3`)}
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
-                    💾 Download
+                    <Download className="w-4 h-4 mr-2" />
+                    Audio
                   </Button>
+                  
+                  {currentTrack.image_url && (
+                    <Button 
+                      onClick={() => handleDownload(currentTrack.image_url, `${currentTrack.title}-cover.jpg`)}
+                      variant="outline" 
+                      className="flex-1 rounded-xl bg-white hover:bg-gray-50"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Cover
+                    </Button>
+                  )}
+                  
                   <Button 
                     onClick={() => setCurrentTrack(null)}
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
-                    🔄 Create New
+                    🔄 New
                   </Button>
                 </div>
               </div>
@@ -304,7 +414,7 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
           </Card>
         </div>
 
-        {/* Recent Creations */}
+        {/* Enhanced Music Library */}
         {musicCreations && musicCreations.length > 0 && (
           <Card className="p-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-0 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
@@ -315,11 +425,50 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
               {musicCreations.map((creation) => (
                 <div
                   key={creation.id}
-                  className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                  className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-all cursor-pointer transform hover:scale-105"
                   onClick={() => creation.status === 'completed' && setCurrentTrack(creation)}
                 >
-                  <h3 className="font-bold text-lg mb-2">{creation.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{creation.prompt}</p>
+                  {/* Album Art Thumbnail */}
+                  <div className="relative mb-3">
+                    {creation.image_url ? (
+                      <img 
+                        src={creation.image_url} 
+                        alt={creation.title}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-32 bg-gradient-to-br from-purple-200 to-pink-200 rounded-lg flex items-center justify-center">
+                        <span className="text-3xl">🎵</span>
+                      </div>
+                    )}
+                    
+                    {creation.status === 'completed' && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayPause(creation);
+                        }}
+                        size="sm"
+                        className="absolute top-2 right-2 rounded-full w-8 h-8 p-0 bg-white/80 hover:bg-white text-gray-800"
+                      >
+                        {isPlaying && currentTrack?.id === creation.id ? 
+                          <Pause className="w-4 h-4" /> : 
+                          <Play className="w-4 h-4" />
+                        }
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <h3 className="font-bold text-lg mb-2 truncate">{creation.title}</h3>
+                  
+                  {creation.duration && (
+                    <p className="text-xs text-gray-500 mb-1">
+                      {formatDuration(creation.duration)}
+                    </p>
+                  )}
+                  
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{creation.prompt}</p>
+                  
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">
                       {creation.instrumental ? '🎹 Instrumental' : '🎤 With Lyrics'}

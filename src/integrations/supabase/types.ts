@@ -138,11 +138,15 @@ export type Database = {
           audio_url: string | null
           completed_at: string | null
           created_at: string
+          duration: number | null
           id: string
+          image_url: string | null
           instrumental: boolean
           prompt: string
           status: string
           style: string | null
+          suno_track_id: string | null
+          tags: string | null
           task_id: string
           title: string
           user_id: string
@@ -151,11 +155,15 @@ export type Database = {
           audio_url?: string | null
           completed_at?: string | null
           created_at?: string
+          duration?: number | null
           id?: string
+          image_url?: string | null
           instrumental?: boolean
           prompt: string
           status?: string
           style?: string | null
+          suno_track_id?: string | null
+          tags?: string | null
           task_id: string
           title: string
           user_id: string
@@ -164,11 +172,15 @@ export type Database = {
           audio_url?: string | null
           completed_at?: string | null
           created_at?: string
+          duration?: number | null
           id?: string
+          image_url?: string | null
           instrumental?: boolean
           prompt?: string
           status?: string
           style?: string | null
+          suno_track_id?: string | null
+          tags?: string | null
           task_id?: string
           title?: string
           user_id?: string
