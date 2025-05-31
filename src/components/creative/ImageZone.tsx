@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ImageZoneProps {
   onBack: () => void;
@@ -11,10 +12,11 @@ interface ImageZoneProps {
 
 const ImageZone = ({ onBack }: ImageZoneProps) => {
   const [prompt, setPrompt] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState('');
+  const [selectedStyle, setSelectedStyle] = useState('cartoon');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
+  // Default style is now pre-selected
   const styles = [
     { value: 'cartoon', label: '🎨 Cartoon Fun' },
     { value: 'realistic', label: '📸 Realistic' },
@@ -40,22 +42,27 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
   ];
 
   const handleGenerateImage = () => {
-    if (!prompt.trim() || !selectedStyle) return;
+    // Use default values if nothing is entered
+    const finalPrompt = prompt.trim() || "A happy robot in a beautiful garden";
+    const finalStyle = selectedStyle || 'cartoon';
 
     setIsGenerating(true);
     
-    // Simulate API call (placeholder for Phase 3 DALL-E integration)
+    // Simulate API call (placeholder for Phase 3 GPT image 1 integration)
+    // System prompt will concatenate: selectedStyle + user prompt + child safety guidelines
     setTimeout(() => {
       const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
       setGeneratedImage(randomImage);
       setIsGenerating(false);
       
-      // Mock save to creations
+      // Mock save to creations (Phase 2 Supabase integration)
       console.log('Saving image creation:', {
         type: 'image',
-        prompt: prompt,
-        style: selectedStyle,
-        image_url: randomImage
+        prompt: finalPrompt,
+        style: finalStyle,
+        image_url: randomImage,
+        // Phase 3: Will include system prompt with safety guidelines
+        system_prompt: `Create a ${finalStyle} style image that is completely safe and appropriate for children aged 5-10. ${finalPrompt}`
       });
     }, 4000);
   };
@@ -64,9 +71,14 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
     setPrompt(suggestion.replace(/[🎨📸✨🚀🌊🤖🌺🏰🐻☕🪐🏠🌳]/g, '').trim());
   };
 
+  const handleDownload = () => {
+    // Phase 3: Implement actual download functionality
+    console.log('Download feature - coming in Phase 3');
+  };
+
   return (
     <div className="min-h-screen p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
           <Button
@@ -77,8 +89,8 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
             ← Back to Hub
           </Button>
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800">🎨 Art Studio 🎨</h1>
-            <p className="text-gray-600">Create beautiful pictures with AI!</p>
+            <h1 className="text-4xl font-bold text-gray-800">🎨 Art Studio 🎨</h1>
+            <p className="text-lg text-gray-600">Create beautiful pictures with AI!</p>
           </div>
           <div className="w-24"></div>
         </div>
@@ -96,15 +108,15 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 <label className="block text-lg font-semibold text-gray-700 mb-3">
                   What do you want to create? 💭
                 </label>
-                <Input
+                <Textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe your amazing picture..."
-                  className="w-full rounded-xl border-2 border-blue-200 focus:border-blue-400 bg-white p-4 text-lg"
-                  maxLength={100}
+                  placeholder="Describe your amazing picture in detail..."
+                  className="w-full rounded-xl border-2 border-blue-200 focus:border-blue-400 bg-white p-4 text-lg min-h-32 resize-none"
+                  maxLength={1000}
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  {prompt.length}/100 characters
+                  {prompt.length}/1000 characters
                 </div>
               </div>
 
@@ -128,7 +140,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
 
               <Button
                 onClick={handleGenerateImage}
-                disabled={!prompt.trim() || !selectedStyle || isGenerating}
+                disabled={isGenerating}
                 className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
               >
                 {isGenerating ? (
@@ -164,18 +176,20 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 
                 <div className="bg-white rounded-xl p-4 space-y-3">
                   <h3 className="font-bold text-gray-800">Your Creation:</h3>
-                  <p className="text-sm text-gray-600 italic">"{prompt}"</p>
+                  <p className="text-sm text-gray-600 italic">"{prompt || 'A happy robot in a beautiful garden'}"</p>
                   <p className="text-sm text-gray-500">Style: {selectedStyle}</p>
                 </div>
 
                 <div className="flex space-x-3">
                   <Button 
+                    onClick={handleDownload}
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
-                    💾 Save
+                    💾 Download
                   </Button>
                   <Button 
+                    onClick={() => setGeneratedImage(null)}
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
@@ -191,6 +205,9 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 </p>
                 <p className="text-sm text-gray-500">
                   Your beautiful artwork will appear here! ✨
+                </p>
+                <p className="text-xs text-gray-400">
+                  Tip: You can click generate without typing anything to try our default example!
                 </p>
               </div>
             )}

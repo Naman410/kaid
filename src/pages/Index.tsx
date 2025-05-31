@@ -4,6 +4,7 @@ import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
 import ProfileSetup from '@/components/onboarding/ProfileSetup';
 import IntroToKaiD from '@/components/onboarding/IntroToKaiD';
 import MainHub from '@/components/hub/MainHub';
+import FloatingDIAChat from '@/components/dia/FloatingDIAChat';
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState('welcome');
@@ -36,6 +37,9 @@ const Index = () => {
       {currentStep === 'hub' && (
         <MainHub userProfile={userProfile} />
       )}
+      
+      {/* Show floating D.I.A. chat on all pages except welcome */}
+      {currentStep !== 'welcome' && <FloatingDIAChat />}
     </div>
   );
 };

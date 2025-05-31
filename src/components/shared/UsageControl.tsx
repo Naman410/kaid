@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-const UsageControl = () => {
+interface UsageControlProps {
+  onUpgrade: () => void;
+}
+
+const UsageControl = ({ onUpgrade }: UsageControlProps) => {
   // Mock usage data (will be tracked in Supabase in Phase 2)
   const [usageData] = useState({
     dailyLimit: 10,
@@ -63,9 +67,9 @@ const UsageControl = () => {
             </div>
             <Button
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-4 py-2 text-sm font-bold transform hover:scale-105 transition-all duration-200"
-              onClick={() => console.log('Navigate to subscription page')}
+              onClick={onUpgrade}
             >
-              {usageData.subscriptionStatus === 'free' ? 'Unlock More Fun! ✨' : 'Manage Plan 🎯'}
+              Unlock More Fun! ✨
             </Button>
           </div>
         </div>

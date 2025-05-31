@@ -19,17 +19,25 @@ interface StoryPart {
 
 const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
   const [storyTitle, setStoryTitle] = useState('');
-  const [storyGenre, setStoryGenre] = useState('');
+  const [storyGenre, setStoryGenre] = useState('adventure');
+  const [storyLength, setStoryLength] = useState('short');
   const [currentInput, setCurrentInput] = useState('');
   const [storyParts, setStoryParts] = useState<StoryPart[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Default values pre-selected
   const genres = [
     { value: 'adventure', label: '🏴‍☠️ Adventure' },
     { value: 'fantasy', label: '🧙‍♂️ Fantasy' },
     { value: 'space', label: '🚀 Space Adventure' },
     { value: 'animals', label: '🐾 Animal Friends' },
     { value: 'magic', label: '✨ Magic & Wonder' }
+  ];
+
+  const storyLengths = [
+    { value: 'short', label: '📄 Short (1000 characters)', chars: 1000 },
+    { value: 'medium', label: '📋 Medium (3000 characters)', chars: 3000 },
+    { value: 'long', label: '📚 Long (5000 characters)', chars: 5000 }
   ];
 
   const storyStarters = [
@@ -49,18 +57,18 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
   ];
 
   const handleAddStoryPart = () => {
-    if (!currentInput.trim()) return;
-
+    const finalInput = currentInput.trim() || "A magical adventure begins";
+    
     setIsGenerating(true);
 
-    // Simulate AI story generation and illustration (placeholder for Phase 3 GPT + DALL-E)
+    // Phase 3: Two API calls needed - ChatGPT for story, GPT image 1 for illustration
     setTimeout(() => {
-      const aiContinuation = generateAIContinuation(currentInput);
+      const aiContinuation = generateAIContinuation(finalInput);
       const randomIllustration = mockIllustrations[Math.floor(Math.random() * mockIllustrations.length)];
 
       const newPart: StoryPart = {
         id: Date.now().toString(),
-        text: `${currentInput} ${aiContinuation}`,
+        text: `${finalInput} ${aiContinuation}`,
         illustration: randomIllustration,
         timestamp: new Date()
       };
@@ -69,13 +77,22 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
       setCurrentInput('');
       setIsGenerating(false);
 
-      // Mock save to creations
-      console.log('Saving story part:', newPart);
+      // Mock save to creations (Phase 2 Supabase integration)
+      console.log('Saving story part:', {
+        type: 'story',
+        genre: storyGenre,
+        length: storyLength,
+        user_input: finalInput,
+        ai_continuation: aiContinuation,
+        // Phase 3: System prompts for ChatGPT and GPT image 1
+        story_system_prompt: `Write a ${storyLength} ${storyGenre} story appropriate for children aged 5-10. Maximum ${storyLengths.find(l => l.value === storyLength)?.chars} characters.`,
+        image_system_prompt: `Create a child-friendly illustration for this story scene: ${finalInput}`
+      });
     }, 2500);
   };
 
   const generateAIContinuation = (userInput: string): string => {
-    // Placeholder AI responses (will be replaced with GPT in Phase 3)
+    // Placeholder AI responses (will be replaced with ChatGPT in Phase 3)
     const continuations = [
       "Suddenly, a friendly dragon appeared with sparkling scales that shimmered in the sunlight! 🐉✨",
       "The magical door opened to reveal a garden where flowers sang beautiful songs! 🌺🎵",
@@ -97,9 +114,14 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
     setCurrentInput(starter);
   };
 
+  const handleDownload = () => {
+    // Phase 3: Implement actual download functionality
+    console.log('Download story feature - coming in Phase 3');
+  };
+
   return (
     <div className="min-h-screen p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
           <Button
@@ -110,8 +132,8 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
             ← Back to Hub
           </Button>
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800">📚 Story Treehouse 📚</h1>
-            <p className="text-gray-600">Write magical stories with AI!</p>
+            <h1 className="text-4xl font-bold text-gray-800">📚 Story Treehouse 📚</h1>
+            <p className="text-lg text-gray-600">Write magical stories with AI!</p>
           </div>
           <div className="w-24"></div>
         </div>
@@ -123,7 +145,7 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
               🌟 Start Your Story! 🌟
             </h2>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-lg font-semibold text-gray-700 mb-2">
                   Story Title 📖
@@ -131,7 +153,7 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
                 <Input
                   value={storyTitle}
                   onChange={(e) => setStoryTitle(e.target.value)}
-                  placeholder="Give your story an awesome title!"
+                  placeholder="My Amazing Adventure"
                   className="rounded-xl border-2 border-purple-200 focus:border-purple-400 bg-white"
                 />
               </div>
@@ -142,12 +164,30 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
                 </label>
                 <Select value={storyGenre} onValueChange={setStoryGenre}>
                   <SelectTrigger className="w-full rounded-xl border-2 border-purple-200 focus:border-purple-400 bg-white">
-                    <SelectValue placeholder="What kind of story?" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {genres.map((genre) => (
                       <SelectItem key={genre.value} value={genre.value}>
                         {genre.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold text-gray-700 mb-2">
+                  Story Length 📏
+                </label>
+                <Select value={storyLength} onValueChange={setStoryLength}>
+                  <SelectTrigger className="w-full rounded-xl border-2 border-purple-200 focus:border-purple-400 bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {storyLengths.map((length) => (
+                      <SelectItem key={length.value} value={length.value}>
+                        {length.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -186,33 +226,40 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
               <h2 className="text-2xl font-bold text-gray-800">
                 {storyTitle || 'My Amazing Story'} ✨
               </h2>
-              <Button
-                onClick={startNewStory}
-                variant="outline"
-                className="rounded-xl"
-              >
-                🔄 New Story
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={handleDownload}
+                  variant="outline"
+                  className="rounded-xl"
+                >
+                  💾 Download
+                </Button>
+                <Button
+                  onClick={startNewStory}
+                  variant="outline"
+                  className="rounded-xl"
+                >
+                  🔄 New Story
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-6">
               {storyParts.map((part, index) => (
-                <div key={part.id} className="border-l-4 border-purple-300 pl-6 space-y-3">
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-1">
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
-                        <p className="text-gray-800 leading-relaxed">{part.text}</p>
-                      </div>
+                <div key={part.id} className="border-l-4 border-purple-300 pl-6 space-y-4">
+                  {/* Image positioned between title and story text */}
+                  {part.illustration && (
+                    <div className="w-full h-48 rounded-xl overflow-hidden shadow-lg">
+                      <img
+                        src={part.illustration}
+                        alt={`Story illustration ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    {part.illustration && (
-                      <div className="w-32 h-24 rounded-xl overflow-hidden shadow-lg">
-                        <img
-                          src={part.illustration}
-                          alt={`Story illustration ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
+                  )}
+                  
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+                    <p className="text-gray-800 leading-relaxed text-lg">{part.text}</p>
                   </div>
                 </div>
               ))}
@@ -231,16 +278,16 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
               value={currentInput}
               onChange={(e) => setCurrentInput(e.target.value)}
               placeholder="What happens next in your story? Write a few sentences and I'll help continue it!"
-              className="min-h-24 rounded-xl border-2 border-teal-200 focus:border-teal-400 bg-white resize-none"
-              maxLength={200}
+              className="min-h-32 rounded-xl border-2 border-teal-200 focus:border-teal-400 bg-white resize-none text-lg"
+              maxLength={1000}
             />
             <div className="text-xs text-gray-500">
-              {currentInput.length}/200 characters
+              {currentInput.length}/1000 characters
             </div>
 
             <Button
               onClick={handleAddStoryPart}
-              disabled={!currentInput.trim() || isGenerating}
+              disabled={isGenerating}
               className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
             >
               {isGenerating ? (
@@ -251,6 +298,49 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
               ) : (
                 'Continue Story! 📖'
               )}
+            </Button>
+            
+            <p className="text-xs text-gray-400 text-center">
+              Tip: You can click continue without typing anything to try our default example!
+            </p>
+          </div>
+        </Card>
+
+        {/* Future Features */}
+        <Card className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 border-0 rounded-2xl shadow-lg">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+            🚀 Coming Soon Features! 🚀
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button
+              disabled
+              variant="outline"
+              className="p-4 h-auto flex flex-col space-y-2 rounded-xl bg-white opacity-75"
+            >
+              <span className="text-2xl">🖼️</span>
+              <span className="text-sm font-medium">Create using image</span>
+              <span className="text-xs text-gray-500">Coming Soon!</span>
+            </Button>
+            
+            <Button
+              disabled
+              variant="outline"
+              className="p-4 h-auto flex flex-col space-y-2 rounded-xl bg-white opacity-75"
+            >
+              <span className="text-2xl">🎤</span>
+              <span className="text-sm font-medium">Create using voice</span>
+              <span className="text-xs text-gray-500">Coming Soon!</span>
+            </Button>
+            
+            <Button
+              disabled
+              variant="outline"
+              className="p-4 h-auto flex flex-col space-y-2 rounded-xl bg-white opacity-75"
+            >
+              <span className="text-2xl">📚</span>
+              <span className="text-sm font-medium">Comic creation</span>
+              <span className="text-xs text-gray-500">Coming Soon!</span>
             </Button>
           </div>
         </Card>

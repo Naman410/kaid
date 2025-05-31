@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import DIAChat from '@/components/dia/DIAChat';
 import MusicZone from '@/components/creative/MusicZone';
 import ImageZone from '@/components/creative/ImageZone';
 import StoryTreehouse from '@/components/creative/StoryTreehouse';
@@ -10,6 +9,7 @@ import LearningTracksHub from '@/components/learning/LearningTracksHub';
 import ProgressTracker from '@/components/shared/ProgressTracker';
 import UsageControl from '@/components/shared/UsageControl';
 import ParentDashboard from '@/components/parent/ParentDashboard';
+import PaymentPage from '@/components/payment/PaymentPage';
 
 interface MainHubProps {
   userProfile: { name: string; avatar: string } | null;
@@ -29,8 +29,6 @@ const MainHub = ({ userProfile }: MainHubProps) => {
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case 'dia':
-        return <DIAChat onBack={() => setCurrentView('hub')} />;
       case 'music':
         return <MusicZone onBack={() => setCurrentView('hub')} />;
       case 'image':
@@ -41,6 +39,8 @@ const MainHub = ({ userProfile }: MainHubProps) => {
         return <LearningTracksHub onBack={() => setCurrentView('hub')} />;
       case 'parent':
         return <ParentDashboard onBack={() => setCurrentView('hub')} />;
+      case 'payment':
+        return <PaymentPage onBack={() => setCurrentView('hub')} />;
       default:
         return renderHubView();
     }
@@ -75,71 +75,52 @@ const MainHub = ({ userProfile }: MainHubProps) => {
       {/* Progress and Usage */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ProgressTracker />
-        <UsageControl />
+        <UsageControl onUpgrade={() => setCurrentView('payment')} />
       </div>
-
-      {/* D.I.A. Chat Quick Access */}
-      <Card className="p-6 bg-gradient-to-r from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-6xl">🤖</div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800">Chat with D.I.A.</h3>
-              <p className="text-gray-600">Your AI friend is ready to talk!</p>
-            </div>
-          </div>
-          <Button
-            onClick={() => setCurrentView('dia')}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
-          >
-            Start Chatting! 💬
-          </Button>
-        </div>
-      </Card>
 
       {/* Creative Zones */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+        <h2 className="text-4xl font-bold text-gray-800 mb-6 text-center">
           🎨 Creative AI Zones 🎨
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card 
-            className="p-6 bg-gradient-to-br from-yellow-200 to-orange-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            className="p-8 bg-gradient-to-br from-yellow-200 to-orange-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
             onClick={() => setCurrentView('music')}
           >
             <div className="text-center space-y-4">
-              <div className="text-6xl">🎵</div>
-              <h3 className="text-xl font-bold text-gray-800">Sound Cave</h3>
-              <p className="text-gray-600">Create amazing music with AI!</p>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl">
+              <div className="text-8xl">🎵</div>
+              <h3 className="text-2xl font-bold text-gray-800">Sound Cave</h3>
+              <p className="text-lg text-gray-600">Create amazing music with AI!</p>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-lg py-3">
                 Make Music! 🎶
               </Button>
             </div>
           </Card>
 
           <Card 
-            className="p-6 bg-gradient-to-br from-green-200 to-blue-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            className="p-8 bg-gradient-to-br from-green-200 to-blue-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
             onClick={() => setCurrentView('image')}
           >
             <div className="text-center space-y-4">
-              <div className="text-6xl">🎨</div>
-              <h3 className="text-xl font-bold text-gray-800">Art Studio</h3>
-              <p className="text-gray-600">Generate beautiful pictures!</p>
-              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl">
+              <div className="text-8xl">🎨</div>
+              <h3 className="text-2xl font-bold text-gray-800">Art Studio</h3>
+              <p className="text-lg text-gray-600">Generate beautiful pictures!</p>
+              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-lg py-3">
                 Create Art! 🖼️
               </Button>
             </div>
           </Card>
 
           <Card 
-            className="p-6 bg-gradient-to-br from-pink-200 to-purple-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            className="p-8 bg-gradient-to-br from-pink-200 to-purple-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
             onClick={() => setCurrentView('story')}
           >
             <div className="text-center space-y-4">
-              <div className="text-6xl">📚</div>
-              <h3 className="text-xl font-bold text-gray-800">Story Treehouse</h3>
-              <p className="text-gray-600">Write magical stories together!</p>
-              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-xl">
+              <div className="text-8xl">📚</div>
+              <h3 className="text-2xl font-bold text-gray-800">Story Treehouse</h3>
+              <p className="text-lg text-gray-600">Write magical stories together!</p>
+              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-lg py-3">
                 Tell Stories! 📖
               </Button>
             </div>

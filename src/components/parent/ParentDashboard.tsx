@@ -12,7 +12,7 @@ const ParentDashboard = ({ onBack }: ParentDashboardProps) => {
   const childData = {
     name: 'Alex',
     joinDate: '2025-05-01',
-    totalTimeSpent: '4h 32m',
+    spentTime: '4h 32m',
     lessonsCompleted: 3,
     creativationsCreated: 12,
     badges: [
@@ -74,8 +74,8 @@ const ParentDashboard = ({ onBack }: ParentDashboardProps) => {
           <Card className="p-6 bg-gradient-to-br from-yellow-100 to-orange-100 border-0 rounded-2xl shadow-lg">
             <div className="text-center">
               <div className="text-4xl mb-2">⏰</div>
-              <div className="text-2xl font-bold text-gray-800">{childData.totalTimeSpent}</div>
-              <div className="text-sm text-gray-600">Total Time</div>
+              <div className="text-2xl font-bold text-gray-800">{childData.spentTime}</div>
+              <div className="text-sm text-gray-600">Spent Time</div>
             </div>
           </Card>
           
