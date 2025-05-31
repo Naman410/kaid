@@ -41,7 +41,10 @@ serve(async (req) => {
 
     // If we have track data, extract the enhanced information
     if (firstTrack) {
-      if (firstTrack.audio_url) {
+      // Prioritize source_stream_audio_url, then audio_url
+      if (firstTrack.source_stream_audio_url) {
+        updateData.audio_url = firstTrack.source_stream_audio_url;
+      } else if (firstTrack.audio_url) {
         updateData.audio_url = firstTrack.audio_url;
       }
       
@@ -62,7 +65,7 @@ serve(async (req) => {
       }
 
       console.log('Extracted track data:', {
-        audio_url: firstTrack.audio_url,
+        audio_url: updateData.audio_url,
         image_url: firstTrack.image_url,
         duration: firstTrack.duration,
         tags: firstTrack.tags,
@@ -87,7 +90,7 @@ serve(async (req) => {
       success: true,
       message: 'Callback processed successfully',
       trackData: firstTrack ? {
-        audio_url: firstTrack.audio_url,
+        audio_url: updateData.audio_url,
         image_url: firstTrack.image_url,
         duration: firstTrack.duration
       } : null

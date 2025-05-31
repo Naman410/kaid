@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Play, Pause, Volume2 } from 'lucide-react';
+import { Download, Play, Pause, RotateCcw } from 'lucide-react';
 
 interface MusicZoneProps {
   onBack: () => void;
@@ -30,6 +30,16 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
   const [currentTrack, setCurrentTrack] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+
+  // Set the latest completed track as current track on load
+  useEffect(() => {
+    if (musicCreations && musicCreations.length > 0 && !currentTrack) {
+      const latestCompleted = musicCreations.find(creation => creation.status === 'completed');
+      if (latestCompleted) {
+        setCurrentTrack(latestCompleted);
+      }
+    }
+  }, [musicCreations, currentTrack]);
 
   // Poll for music creation updates
   useEffect(() => {
@@ -99,8 +109,8 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
       });
 
       toast({
-        title: "Music generation started!",
-        description: "Your music is being created. This may take a few minutes.",
+        title: "Music generation started! 🎵",
+        description: "We're creating your music! Please come back in a few minutes and reload the page to see your creation.",
       });
 
       // Clear form
@@ -154,14 +164,28 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
     }
   };
 
-  const handleDownload = (url: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDirectDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the object URL
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      toast({
+        title: "Download Error",
+        description: "Failed to download file",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatDuration = (seconds: number) => {
@@ -179,6 +203,15 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
       default: return 'Processing... 🎼';
     }
   };
+
+  // Sort music creations to show latest completed first
+  const sortedMusicCreations = musicCreations ? [...musicCreations].sort((a, b) => {
+    // Completed tracks first
+    if (a.status === 'completed' && b.status !== 'completed') return -1;
+    if (b.status === 'completed' && a.status !== 'completed') return 1;
+    // Then by creation date (newest first)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  }) : [];
 
   return (
     <div className="min-h-screen p-4">
@@ -302,7 +335,7 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
                     <span>Starting Creation... 🎵</span>
                   </div>
                 ) : (
-                  'Create My Music! 🎶'
+                  '🎶 Create My Music! 🎶'
                 )}
               </Button>
             </div>
@@ -349,20 +382,6 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
 
                 {/* Enhanced Controls */}
                 <div className="bg-white rounded-xl p-4 shadow-inner">
-                  <div className="flex items-center justify-center space-x-4 mb-4">
-                    <Button
-                      onClick={() => handlePlayPause(currentTrack)}
-                      variant="outline"
-                      size="lg"
-                      className="rounded-full w-16 h-16"
-                    >
-                      {isPlaying && currentTrack?.id === currentTrack.id ? 
-                        <Pause className="w-8 h-8" /> : 
-                        <Play className="w-8 h-8 ml-1" />
-                      }
-                    </Button>
-                  </div>
-                  
                   <audio 
                     controls 
                     className="w-full"
@@ -375,7 +394,7 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
                 {/* Download Options */}
                 <div className="flex space-x-3">
                   <Button 
-                    onClick={() => handleDownload(currentTrack.audio_url, `${currentTrack.title}.mp3`)}
+                    onClick={() => handleDirectDownload(currentTrack.audio_url, `${currentTrack.title}.mp3`)}
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
@@ -385,7 +404,7 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
                   
                   {currentTrack.image_url && (
                     <Button 
-                      onClick={() => handleDownload(currentTrack.image_url, `${currentTrack.title}-cover.jpg`)}
+                      onClick={() => handleDirectDownload(currentTrack.image_url, `${currentTrack.title}-cover.jpg`)}
                       variant="outline" 
                       className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                     >
@@ -399,7 +418,8 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
                     variant="outline" 
                     className="flex-1 rounded-xl bg-white hover:bg-gray-50"
                   >
-                    🔄 New
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    New
                   </Button>
                 </div>
               </div>
@@ -415,14 +435,14 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
         </div>
 
         {/* Enhanced Music Library */}
-        {musicCreations && musicCreations.length > 0 && (
+        {sortedMusicCreations && sortedMusicCreations.length > 0 && (
           <Card className="p-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-0 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
               🎵 Your Music Library 🎵
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {musicCreations.map((creation) => (
+              {sortedMusicCreations.map((creation) => (
                 <div
                   key={creation.id}
                   className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-all cursor-pointer transform hover:scale-105"
