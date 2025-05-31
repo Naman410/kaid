@@ -1,46 +1,40 @@
 
-import { useState } from 'react';
-import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
-import ProfileSetup from '@/components/onboarding/ProfileSetup';
-import IntroToKaiD from '@/components/onboarding/IntroToKaiD';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import AuthScreen from '@/components/auth/AuthScreen';
 import MainHub from '@/components/hub/MainHub';
 import FloatingDIAChat from '@/components/dia/FloatingDIAChat';
 
-const Index = () => {
-  const [currentStep, setCurrentStep] = useState('welcome');
-  const [userProfile, setUserProfile] = useState(null);
+const AppContent = () => {
+  const { user, profile, loading } = useAuth();
 
-  const handleStepComplete = (step: string, data?: any) => {
-    console.log(`Completed step: ${step}`, data);
-    
-    if (step === 'welcome') {
-      setCurrentStep('profile');
-    } else if (step === 'profile') {
-      setUserProfile(data);
-      setCurrentStep('intro');
-    } else if (step === 'intro') {
-      setCurrentStep('hub');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-8xl animate-bounce">🤖</div>
+          <div className="text-2xl font-bold text-white">Loading KaiD...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300">
-      {currentStep === 'welcome' && (
-        <WelcomeScreen onComplete={() => handleStepComplete('welcome')} />
-      )}
-      {currentStep === 'profile' && (
-        <ProfileSetup onComplete={(data) => handleStepComplete('profile', data)} />
-      )}
-      {currentStep === 'intro' && (
-        <IntroToKaiD onComplete={() => handleStepComplete('intro')} />
-      )}
-      {currentStep === 'hub' && (
-        <MainHub userProfile={userProfile} />
-      )}
-      
-      {/* Show floating D.I.A. chat on all pages except welcome */}
-      {currentStep !== 'welcome' && <FloatingDIAChat />}
+      <MainHub userProfile={profile} />
+      <FloatingDIAChat />
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

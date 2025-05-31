@@ -1,19 +1,22 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UsageControlProps {
   onUpgrade: () => void;
 }
 
 const UsageControl = ({ onUpgrade }: UsageControlProps) => {
-  // Mock usage data (will be tracked in Supabase in Phase 2)
+  const { profile } = useAuth();
+  
+  // Mock usage data that will be tracked properly in Phase 3
   const [usageData] = useState({
-    dailyLimit: 10,
-    used: 3,
+    dailyLimit: profile?.subscription_status === 'premium' ? 50 : 10,
+    used: profile?.request_count_today || 0,
     resetTime: '12:00 AM',
-    subscriptionStatus: 'free'
+    subscriptionStatus: profile?.subscription_status || 'free'
   });
 
   const remainingCreations = usageData.dailyLimit - usageData.used;
@@ -65,12 +68,14 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
                 </span>
               </div>
             </div>
-            <Button
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-4 py-2 text-sm font-bold transform hover:scale-105 transition-all duration-200"
-              onClick={onUpgrade}
-            >
-              Unlock More Fun! ✨
-            </Button>
+            {usageData.subscriptionStatus === 'free' && (
+              <Button
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-4 py-2 text-sm font-bold transform hover:scale-105 transition-all duration-200"
+                onClick={onUpgrade}
+              >
+                Unlock More Fun! ✨
+              </Button>
+            )}
           </div>
         </div>
 
@@ -86,7 +91,9 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
           <div className="bg-blue-100 rounded-xl p-4 text-center">
             <div className="text-2xl mb-2">⏰</div>
             <div className="text-sm font-semibold text-blue-800">
-              Come back tomorrow for more AI fun!
+              {usageData.subscriptionStatus === 'premium' 
+                ? 'Wow! You\'ve been super creative today!' 
+                : 'Upgrade for unlimited AI fun!'}
             </div>
           </div>
         )}
