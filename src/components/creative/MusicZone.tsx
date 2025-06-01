@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/hooks/useAuth';
@@ -127,41 +126,48 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Main Music Zone Card */}
-      <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-gray-800">
-            🎵 Music Studio 🎵
-          </CardTitle>
-          <p className="text-gray-600">Create amazing music with AI!</p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Music Creation Interface */}
-          <div className="grid grid-cols-1 gap-6">
-            {/* Music Generator */}
-            <MusicGenerator 
-              onGenerateMusic={handleGenerateMusic}
-              isGenerating={generateMusicMutation.isPending}
-            />
-
-            {/* Music Player */}
-            <MusicPlayer 
-              currentTrack={currentTrack}
-              onClearTrack={() => setCurrentTrack(null)}
-            />
+    <div className="min-h-screen p-4">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+          <Button
+            onClick={onBack}
+            variant="outline"
+            className="rounded-xl"
+          >
+            ← Back to Hub
+          </Button>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-800">🎵 Sound Cave 🎵</h1>
+            <p className="text-lg text-gray-600">Create amazing music with AI!</p>
           </div>
+          <div className="w-24"></div>
+        </div>
 
-          {/* Music Library */}
-          <MusicLibrary 
-            musicCreations={musicCreations || []}
-            currentTrack={currentTrack}
-            isPlaying={isPlaying}
-            onSelectTrack={setCurrentTrack}
-            onPlayPause={handlePlayPause}
+        {/* Music Creation Interface */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Music Generator */}
+          <MusicGenerator 
+            onGenerateMusic={handleGenerateMusic}
+            isGenerating={generateMusicMutation.isPending}
           />
-        </CardContent>
-      </Card>
+
+          {/* Music Player */}
+          <MusicPlayer 
+            currentTrack={currentTrack}
+            onClearTrack={() => setCurrentTrack(null)}
+          />
+        </div>
+
+        {/* Music Library */}
+        <MusicLibrary 
+          musicCreations={musicCreations || []}
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          onSelectTrack={setCurrentTrack}
+          onPlayPause={handlePlayPause}
+        />
+      </div>
     </div>
   );
 };

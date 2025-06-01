@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +23,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
+  // Default style is now pre-selected
   const styles = [
     { value: 'cartoon', label: '🎨 Cartoon Fun' },
     { value: 'realistic', label: '📸 Realistic' },
@@ -126,29 +126,42 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Main Art Studio Card */}
-      <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-gray-800">
-            🎨 Art Studio 🎨
-          </CardTitle>
-          <p className="text-gray-600">Create beautiful pictures with AI!</p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Image Generation Interface */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Controls */}
-            <div className="space-y-4">
+    <div className="min-h-screen p-4">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+          <Button
+            onClick={onBack}
+            variant="outline"
+            className="rounded-xl"
+          >
+            ← Back to Hub
+          </Button>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-800">🎨 Art Studio 🎨</h1>
+            <p className="text-lg text-gray-600">Create beautiful pictures with AI!</p>
+          </div>
+          <div className="w-24"></div>
+        </div>
+
+        {/* Image Generation Interface */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Controls */}
+          <Card className="p-6 bg-gradient-to-br from-green-100 to-blue-100 border-0 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+              🖼️ AI Image Creator 🖼️
+            </h2>
+            
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-lg font-semibold text-gray-700 mb-3">
                   What do you want to create? 💭
                 </label>
                 <Textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe your amazing picture..."
-                  className="min-h-24 resize-none"
+                  placeholder="Describe your amazing picture in detail..."
+                  className="w-full rounded-xl border-2 border-blue-200 focus:border-blue-400 bg-white p-4 text-lg min-h-32 resize-none"
                   maxLength={1000}
                 />
                 <div className="text-xs text-gray-500 mt-1">
@@ -157,12 +170,12 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-lg font-semibold text-gray-700 mb-3">
                   Choose an art style! 🎭
                 </label>
                 <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="w-full rounded-xl border-2 border-blue-200 focus:border-blue-400 bg-white">
+                    <SelectValue placeholder="Pick a style..." />
                   </SelectTrigger>
                   <SelectContent>
                     {styles.map((style) => (
@@ -177,79 +190,124 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
               <Button
                 onClick={handleGenerateImage}
                 disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
               >
                 {isGenerating ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
                     <span>Creating Art... 🎨</span>
                   </div>
                 ) : (
-                  'Generate My Image! 🖼️'
+                  'Generate My Image with AI! 🖼️'
                 )}
               </Button>
             </div>
+          </Card>
 
-            {/* Generated Image Display */}
-            <div className="space-y-4">
-              {generatedImage ? (
-                <div className="space-y-4">
+          {/* Generated Image Display */}
+          <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+              🖼️ Your AI Artwork 🖼️
+            </h2>
+
+            {generatedImage ? (
+              <div className="space-y-4">
+                <div className="relative">
                   <img
                     src={generatedImage}
                     alt="AI Generated artwork"
-                    className="w-full h-48 object-cover rounded-lg shadow-lg"
+                    className="w-full h-64 object-cover rounded-xl shadow-lg"
                   />
-                  
-                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                    <h4 className="font-medium text-gray-800">Your Creation:</h4>
-                    <p className="text-sm text-gray-600 italic">"{prompt || 'A happy robot in a beautiful garden'}"</p>
-                    <p className="text-xs text-gray-500">Style: {selectedStyle}</p>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      onClick={handleDownload}
-                      variant="outline" 
-                      className="flex-1"
-                    >
-                      💾 Download
-                    </Button>
-                    <Button 
-                      onClick={() => setGeneratedImage(null)}
-                      variant="outline" 
-                      className="flex-1"
-                    >
-                      🔄 Create New
-                    </Button>
+                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
+                    <span className="text-lg">✨</span>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center space-y-4 py-12 bg-gray-50 rounded-lg">
-                  <div className="text-4xl">🎨</div>
-                  <p className="text-gray-600">Your beautiful AI artwork will appear here!</p>
+                
+                <div className="bg-white rounded-xl p-4 space-y-3">
+                  <h3 className="font-bold text-gray-800">Your AI Creation:</h3>
+                  <p className="text-sm text-gray-600 italic">"{prompt || 'A happy robot in a beautiful garden'}"</p>
+                  <p className="text-sm text-gray-500">Style: {selectedStyle}</p>
+                  <p className="text-xs text-green-600">✨ Created with real AI magic!</p>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Prompt Suggestions */}
-          <div className="border-t pt-4">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">💡 Need Ideas?</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {promptSuggestions.map((suggestion, index) => (
-                <Button
-                  key={index}
-                  onClick={() => handlePromptSuggestion(suggestion)}
-                  variant="outline"
-                  className="text-left h-auto p-3 text-sm"
-                >
-                  {suggestion}
-                </Button>
-              ))}
-            </div>
+                <div className="flex space-x-3">
+                  <Button 
+                    onClick={handleDownload}
+                    variant="outline" 
+                    className="flex-1 rounded-xl bg-white hover:bg-gray-50"
+                  >
+                    💾 Download
+                  </Button>
+                  <Button 
+                    onClick={() => setGeneratedImage(null)}
+                    variant="outline" 
+                    className="flex-1 rounded-xl bg-white hover:bg-gray-50"
+                  >
+                    🔄 Create New
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center space-y-4 py-12">
+                <div className="text-6xl">🎨</div>
+                <p className="text-lg text-gray-600">
+                  Describe what you want to create!
+                </p>
+                <p className="text-sm text-gray-500">
+                  Your beautiful AI artwork will appear here! ✨
+                </p>
+                <p className="text-xs text-gray-400">
+                  Powered by real AI - each image is unique!
+                </p>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Prompt Suggestions */}
+        <Card className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 border-0 rounded-2xl shadow-lg">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+            💡 Need Ideas? Try These! 💡
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {promptSuggestions.map((suggestion, index) => (
+              <Button
+                key={index}
+                onClick={() => handlePromptSuggestion(suggestion)}
+                variant="outline"
+                className="p-4 h-auto text-left rounded-xl bg-white hover:bg-orange-50 transform hover:scale-105 transition-all duration-200"
+              >
+                <span className="text-sm">{suggestion}</span>
+              </Button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+
+        {/* Plan B: Drawing Tools */}
+        <Card className="p-6 bg-gradient-to-r from-pink-100 to-rose-100 border-0 rounded-2xl shadow-lg">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+            ✏️ Drawing Tools ✏️
+          </h2>
+          <p className="text-center text-gray-600 mb-6">
+            Create your own masterpiece with these tools!
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {['🖍️ Crayon', '✏️ Pencil', '🖌️ Brush', '🖊️ Pen', '🌈 Rainbow', '⭐ Stickers', '🔺 Shapes', '📐 Lines'].map((tool) => (
+              <Button
+                key={tool}
+                variant="outline"
+                className="p-4 h-auto flex flex-col space-y-2 rounded-xl bg-white hover:bg-pink-50 transform hover:scale-105 transition-all duration-200"
+                onClick={() => console.log(`Selected ${tool}`)}
+              >
+                <span className="text-2xl">{tool.split(' ')[0]}</span>
+                <span className="text-sm font-medium">{tool.split(' ')[1]}</span>
+              </Button>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
