@@ -191,6 +191,7 @@ export type Database = {
         Row: {
           avatar_url: string
           created_at: string | null
+          has_seen_intro: boolean
           id: string
           request_count_today: number | null
           subscription_status: string | null
@@ -200,6 +201,7 @@ export type Database = {
         Insert: {
           avatar_url: string
           created_at?: string | null
+          has_seen_intro?: boolean
           id: string
           request_count_today?: number | null
           subscription_status?: string | null
@@ -209,6 +211,7 @@ export type Database = {
         Update: {
           avatar_url?: string
           created_at?: string | null
+          has_seen_intro?: boolean
           id?: string
           request_count_today?: number | null
           subscription_status?: string | null
@@ -286,6 +289,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_assets: {
+        Row: {
+          asset_type: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          url: string
+          usage_context: string
+        }
+        Insert: {
+          asset_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          url: string
+          usage_context: string
+        }
+        Update: {
+          asset_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          url?: string
+          usage_context?: string
+        }
+        Relationships: []
       }
       user_achieved_milestones: {
         Row: {

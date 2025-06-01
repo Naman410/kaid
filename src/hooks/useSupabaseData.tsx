@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -5,6 +6,28 @@ import { useAuth } from './useAuth';
 export const useSupabaseData = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Fetch site assets
+  const useSiteAssets = (usageContext?: string) => {
+    return useQuery({
+      queryKey: ['site-assets', usageContext],
+      queryFn: async () => {
+        let query = supabase
+          .from('site_assets')
+          .select('*')
+          .eq('is_active', true);
+        
+        if (usageContext) {
+          query = query.eq('usage_context', usageContext);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        return data;
+      },
+    });
+  };
 
   // Fetch learning tracks
   const useLearningTracks = () => {
@@ -134,6 +157,23 @@ export const useSupabaseData = () => {
     });
   };
 
+  // Mark intro as seen mutation
+  const useMarkIntroSeen = () => {
+    return useMutation({
+      mutationFn: async () => {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ has_seen_intro: true })
+          .eq('id', user?.id);
+        
+        if (error) throw error;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+      },
+    });
+  };
+
   // Generate music mutation
   const useGenerateMusic = () => {
     return useMutation({
@@ -163,6 +203,7 @@ export const useSupabaseData = () => {
   };
 
   return {
+    useSiteAssets,
     useLearningTracks,
     useLessons,
     useUserProgress,
@@ -171,5 +212,6 @@ export const useSupabaseData = () => {
     useUpdateProgress,
     useUserMusicCreations,
     useGenerateMusic,
+    useMarkIntroSeen,
   };
 };

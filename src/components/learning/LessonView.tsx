@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
+import VideoLessonView from './VideoLessonView';
 
 interface LessonViewProps {
   lesson: any;
@@ -18,7 +19,18 @@ const LessonView = ({ lesson, onComplete, onBack }: LessonViewProps) => {
   const updateProgressMutation = useUpdateProgress();
   const { toast } = useToast();
   
-  // Split content into manageable pages for better UX
+  // If lesson has a video URL and content type is video, use VideoLessonView
+  if (lesson.content_type === 'video' && lesson.video_url) {
+    return (
+      <VideoLessonView 
+        lesson={lesson} 
+        onComplete={onComplete} 
+        onBack={onBack} 
+      />
+    );
+  }
+  
+  // Fallback to text-based lesson for backward compatibility
   const contentPages = lesson.content_text?.split('\n\n').filter((page: string) => page.trim()) || [''];
   const totalPages = contentPages.length;
 
