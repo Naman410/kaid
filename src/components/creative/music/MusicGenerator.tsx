@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { Lock } from 'lucide-react';
 
 interface MusicGeneratorProps {
   onGenerateMusic: (params: {
@@ -16,9 +17,10 @@ interface MusicGeneratorProps {
     instrumental: boolean;
   }) => Promise<void>;
   isGenerating: boolean;
+  isBlocked?: boolean;
 }
 
-const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) => {
+const MusicGenerator = ({ onGenerateMusic, isGenerating, isBlocked = false }: MusicGeneratorProps) => {
   const { toast } = useToast();
   const [selectedGenre, setSelectedGenre] = useState('happy');
   const [selectedMood, setSelectedMood] = useState('play');
@@ -51,6 +53,15 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
   };
 
   const handleGenerateMusic = async () => {
+    if (isBlocked) {
+      toast({
+        title: "Get Pro Plan! 🔒",
+        description: "Upgrade to unlock unlimited music creation!",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const finalPrompt = userPrompt.trim() || "Create a fun and happy tune";
     const finalName = musicName.trim() || generateRandomName();
 
@@ -91,6 +102,7 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
             placeholder="Tell me what kind of music you want to create... (optional)"
             className="w-full rounded-xl border-2 border-orange-200 focus:border-orange-400 bg-white resize-none min-h-24"
             maxLength={500}
+            disabled={isBlocked}
           />
           <div className="text-xs text-gray-500 mt-1">
             {userPrompt.length}/500 characters
@@ -101,7 +113,7 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
           <label className="block text-lg font-semibold text-gray-700 mb-3">
             What kind of music? 🎭
           </label>
-          <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+          <Select value={selectedGenre} onValueChange={setSelectedGenre} disabled={isBlocked}>
             <SelectTrigger className="w-full rounded-xl border-2 border-orange-200 focus:border-orange-400 bg-white">
               <SelectValue />
             </SelectTrigger>
@@ -119,7 +131,7 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
           <label className="block text-lg font-semibold text-gray-700 mb-3">
             What's the vibe? 🌈
           </label>
-          <Select value={selectedMood} onValueChange={setSelectedMood}>
+          <Select value={selectedMood} onValueChange={setSelectedMood} disabled={isBlocked}>
             <SelectTrigger className="w-full rounded-xl border-2 border-orange-200 focus:border-orange-400 bg-white">
               <SelectValue />
             </SelectTrigger>
@@ -143,11 +155,13 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
               onChange={(e) => setMusicName(e.target.value)}
               placeholder="My Amazing Song"
               className="flex-1 rounded-xl border-2 border-orange-200 focus:border-orange-400 bg-white"
+              disabled={isBlocked}
             />
             <Button
               onClick={() => setMusicName(generateRandomName())}
               variant="outline"
               className="rounded-xl"
+              disabled={isBlocked}
             >
               🎲 Random
             </Button>
@@ -158,6 +172,7 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
           <Switch
             checked={instrumental}
             onCheckedChange={setInstrumental}
+            disabled={isBlocked}
           />
           <label className="text-lg font-semibold text-gray-700">
             Instrumental only (no lyrics)
@@ -166,10 +181,19 @@ const MusicGenerator = ({ onGenerateMusic, isGenerating }: MusicGeneratorProps) 
 
         <Button
           onClick={handleGenerateMusic}
-          disabled={isGenerating}
-          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
+          disabled={isGenerating || isBlocked}
+          className={`w-full py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200 ${
+            isBlocked 
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
+          }`}
         >
-          {isGenerating ? (
+          {isBlocked ? (
+            <div className="flex items-center justify-center space-x-2">
+              <Lock className="h-5 w-5" />
+              <span>🔒 Get Pro Plan!</span>
+            </div>
+          ) : isGenerating ? (
             <div className="flex items-center justify-center space-x-2">
               <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
               <span>Starting Creation... 🎵</span>

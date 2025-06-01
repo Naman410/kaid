@@ -9,11 +9,12 @@ interface PaymentPageProps {
 
 const PaymentPage = ({ onBack }: PaymentPageProps) => {
   const freeFeatures = [
-    "5 AI creations per day",
+    "10 total AI creations",
     "Basic music generation",
     "Simple image creation",
     "Short story writing",
-    "Learning tracks access"
+    "Learning tracks access",
+    "50 DIA chat messages per day"
   ];
 
   const premiumFeatures = [
@@ -24,7 +25,8 @@ const PaymentPage = ({ onBack }: PaymentPageProps) => {
     "Priority support",
     "Early access to new features",
     "Download all your creations",
-    "Advanced drawing tools"
+    "Advanced drawing tools",
+    "Unlimited DIA chat messages"
   ];
 
   return (
@@ -52,7 +54,7 @@ const PaymentPage = ({ onBack }: PaymentPageProps) => {
             <div className="text-4xl">🆓</div>
             <h2 className="text-2xl font-bold text-gray-800">You're currently on our Free Plan</h2>
             <p className="text-gray-600 text-lg">
-              You have limited access to AI models and can create up to 5 AI creations per day.
+              You have limited access to AI models and can create up to 10 total AI creations.
             </p>
           </div>
         </Card>
@@ -65,7 +67,7 @@ const PaymentPage = ({ onBack }: PaymentPageProps) => {
               <div className="text-6xl">🌟</div>
               <h3 className="text-2xl font-bold text-gray-800">Free Plan</h3>
               <div className="text-4xl font-bold text-gray-600">$0</div>
-              <div className="text-gray-500">per month</div>
+              <div className="text-gray-500">forever</div>
               
               <div className="space-y-3 pt-4">
                 {freeFeatures.map((feature, index) => (
@@ -128,7 +130,7 @@ const PaymentPage = ({ onBack }: PaymentPageProps) => {
             <div className="text-center space-y-3">
               <div className="text-4xl">🚀</div>
               <h3 className="text-lg font-bold text-gray-800">Unlimited Creativity</h3>
-              <p className="text-gray-600">Create as much as you want without daily limits!</p>
+              <p className="text-gray-600">Create as much as you want without limits!</p>
             </div>
             
             <div className="text-center space-y-3">

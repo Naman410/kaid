@@ -12,7 +12,7 @@ import ParentDashboard from '@/components/parent/ParentDashboard';
 import PaymentPage from '@/components/payment/PaymentPage';
 
 interface MainHubProps {
-  userProfile: { name: string; avatar: string } | null;
+  userProfile: { username: string; avatar_url: string } | null;
 }
 
 const MainHub = ({ userProfile }: MainHubProps) => {
@@ -52,11 +52,11 @@ const MainHub = ({ userProfile }: MainHubProps) => {
       <div className="flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
         <div className="flex items-center space-x-3">
           <div className="text-4xl">
-            {userProfile ? avatarEmojis[userProfile.avatar as keyof typeof avatarEmojis] : '🤖'}
+            {userProfile ? avatarEmojis[userProfile.avatar_url as keyof typeof avatarEmojis] : '🤖'}
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              Hi {userProfile?.name || 'Friend'}! 👋
+              Hi {userProfile?.username || 'Friend'}! 👋
             </h1>
             <p className="text-gray-600">Ready for some AI fun?</p>
           </div>

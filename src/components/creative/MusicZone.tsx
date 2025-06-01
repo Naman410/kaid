@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import MusicGenerator from './music/MusicGenerator';
 import MusicPlayer from './music/MusicPlayer';
 import MusicLibrary from './music/MusicLibrary';
@@ -13,7 +14,7 @@ interface MusicZoneProps {
 }
 
 const MusicZone = ({ onBack }: MusicZoneProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const { useGenerateMusic, useUserMusicCreations } = useSupabaseData();
   const generateMusicMutation = useGenerateMusic();
@@ -22,6 +23,12 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
   const [currentTrack, setCurrentTrack] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
+
+  // Check usage limits on component mount
+  useEffect(() => {
+    checkUsageLimits();
+  }, [profile]);
 
   // Set the latest completed track as current track on load
   useEffect(() => {
@@ -55,6 +62,14 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
     };
   }, [currentAudio]);
 
+  const checkUsageLimits = () => {
+    if (profile) {
+      const totalLimit = profile.subscription_status === 'premium' ? 999999 : 10;
+      const used = profile.total_creations_used || 0;
+      setIsBlocked(used >= totalLimit);
+    }
+  };
+
   const handleGenerateMusic = async (params: {
     prompt: string;
     style: string;
@@ -70,7 +85,31 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
       return;
     }
 
+    if (isBlocked) {
+      toast({
+        title: "Creation limit reached! 🔒",
+        description: "Upgrade to Pro Plan for unlimited creations!",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      // Track usage before generating
+      const { data: usageResult } = await supabase.functions.invoke('track-usage', {
+        body: { userId: user.id, actionType: 'music_creation' }
+      });
+
+      if (!usageResult?.canProceed) {
+        setIsBlocked(true);
+        toast({
+          title: "Creation limit reached! 🔒",
+          description: usageResult?.message || "Upgrade to Pro Plan for unlimited creations!",
+          variant: "destructive"
+        });
+        return;
+      }
+
       await generateMusicMutation.mutateAsync(params);
 
       toast({
@@ -150,6 +189,7 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
           <MusicGenerator 
             onGenerateMusic={handleGenerateMusic}
             isGenerating={generateMusicMutation.isPending}
+            isBlocked={isBlocked}
           />
 
           {/* Music Player */}

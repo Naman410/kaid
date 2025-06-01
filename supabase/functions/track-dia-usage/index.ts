@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, actionType } = await req.json();
+    const { userId } = await req.json();
     
-    console.log('Usage tracking request:', { userId, actionType });
+    console.log('DIA usage tracking request:', { userId });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -26,7 +26,7 @@ serve(async (req) => {
     // Get current user profile
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('total_creations_used, subscription_status')
+      .select('daily_dia_messages, last_dia_reset, subscription_status')
       .eq('id', userId)
       .single();
 
@@ -34,45 +34,60 @@ serve(async (req) => {
       throw new Error('Failed to fetch user profile');
     }
 
-    // Check usage limits - lifetime limit of 10 for free users
-    const totalLimit = profile.subscription_status === 'premium' ? 999999 : 10;
-    const currentUsage = profile.total_creations_used || 0;
+    const now = new Date();
+    const lastReset = new Date(profile.last_dia_reset || now);
+    const isNewDay = now.getDate() !== lastReset.getDate() || 
+                     now.getMonth() !== lastReset.getMonth() || 
+                     now.getFullYear() !== lastReset.getFullYear();
 
-    if (currentUsage >= totalLimit) {
+    let currentMessages = profile.daily_dia_messages || 0;
+    
+    // Reset counter if it's a new day
+    if (isNewDay) {
+      currentMessages = 0;
+    }
+
+    // Check daily limit - 50 messages per day for all users
+    const dailyLimit = 50;
+
+    if (currentMessages >= dailyLimit) {
       return new Response(JSON.stringify({ 
         canProceed: false,
-        message: `Creation limit of ${totalLimit} reached. ${profile.subscription_status === 'free' ? 'Upgrade for unlimited creations!' : 'Contact support for assistance.'}`,
-        remainingUses: 0
+        message: "Today's message limit reached, come back tomorrow!",
+        remainingMessages: 0
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Increment usage count
+    // Increment message count
+    const updateData = {
+      daily_dia_messages: currentMessages + 1,
+      updated_at: now.toISOString(),
+      ...(isNewDay && { last_dia_reset: now.toISOString() })
+    };
+
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ 
-        total_creations_used: currentUsage + 1,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', userId);
 
     if (updateError) {
-      throw new Error('Failed to update usage count');
+      throw new Error('Failed to update DIA message count');
     }
 
-    console.log('Usage tracked successfully');
+    console.log('DIA usage tracked successfully');
 
     return new Response(JSON.stringify({ 
       canProceed: true,
-      remainingUses: totalLimit - (currentUsage + 1),
-      message: 'Usage tracked successfully'
+      remainingMessages: dailyLimit - (currentMessages + 1),
+      message: 'DIA message tracked successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in track-usage function:', error);
+    console.error('Error in track-dia-usage function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
       canProceed: false
