@@ -191,42 +191,30 @@ export type Database = {
         Row: {
           avatar_url: string
           created_at: string | null
-          daily_dia_messages: number | null
-          email_verified: boolean | null
           has_seen_intro: boolean
           id: string
-          last_dia_reset: string | null
           request_count_today: number | null
           subscription_status: string | null
-          total_creations_used: number | null
           updated_at: string | null
           username: string
         }
         Insert: {
           avatar_url: string
           created_at?: string | null
-          daily_dia_messages?: number | null
-          email_verified?: boolean | null
           has_seen_intro?: boolean
           id: string
-          last_dia_reset?: string | null
           request_count_today?: number | null
           subscription_status?: string | null
-          total_creations_used?: number | null
           updated_at?: string | null
           username: string
         }
         Update: {
           avatar_url?: string
           created_at?: string | null
-          daily_dia_messages?: number | null
-          email_verified?: boolean | null
           has_seen_intro?: boolean
           id?: string
-          last_dia_reset?: string | null
           request_count_today?: number | null
           subscription_status?: string | null
-          total_creations_used?: number | null
           updated_at?: string | null
           username?: string
         }

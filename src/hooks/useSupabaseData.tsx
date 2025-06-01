@@ -132,7 +132,6 @@ export const useSupabaseData = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user-creations'] });
-        queryClient.invalidateQueries({ queryKey: ['profile'] });
       },
     });
   };
@@ -175,7 +174,7 @@ export const useSupabaseData = () => {
     });
   };
 
-  // Generate music mutation with usage tracking
+  // Generate music mutation
   const useGenerateMusic = () => {
     return useMutation({
       mutationFn: async ({ prompt, style, title, instrumental }: { 
@@ -184,16 +183,6 @@ export const useSupabaseData = () => {
         title: string; 
         instrumental: boolean; 
       }) => {
-        // First check usage limits
-        const { data: usageData, error: usageError } = await supabase.functions.invoke('track-usage', {
-          body: { userId: user?.id, actionType: 'music_generation' }
-        });
-        
-        if (usageError) throw usageError;
-        if (!usageData.canProceed) {
-          throw new Error(usageData.message);
-        }
-
         const { data, error } = await supabase.functions.invoke('generate-music', {
           body: {
             prompt,
@@ -209,24 +198,6 @@ export const useSupabaseData = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user-music-creations'] });
-        queryClient.invalidateQueries({ queryKey: ['profile'] });
-      },
-    });
-  };
-
-  // Track DIA message usage
-  const useTrackDIAMessage = () => {
-    return useMutation({
-      mutationFn: async () => {
-        const { data, error } = await supabase.functions.invoke('track-dia-usage', {
-          body: { userId: user?.id }
-        });
-        
-        if (error) throw error;
-        return data;
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['profile'] });
       },
     });
   };
@@ -242,6 +213,5 @@ export const useSupabaseData = () => {
     useUserMusicCreations,
     useGenerateMusic,
     useMarkIntroSeen,
-    useTrackDIAMessage,
   };
 };

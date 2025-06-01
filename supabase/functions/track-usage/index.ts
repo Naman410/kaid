@@ -26,7 +26,7 @@ serve(async (req) => {
     // Get current user profile
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('total_creations_used, subscription_status')
+      .select('request_count_today, subscription_status')
       .eq('id', userId)
       .single();
 
@@ -34,25 +34,25 @@ serve(async (req) => {
       throw new Error('Failed to fetch user profile');
     }
 
-    // Check lifetime creation limits (10 for free, 50 for premium)
-    const creationLimit = profile.subscription_status === 'premium' ? 50 : 10;
-    const currentUsage = profile.total_creations_used || 0;
+    // Check usage limits
+    const dailyLimit = profile.subscription_status === 'premium' ? 50 : 10;
+    const currentUsage = profile.request_count_today || 0;
 
-    if (currentUsage >= creationLimit) {
+    if (currentUsage >= dailyLimit) {
       return new Response(JSON.stringify({ 
         canProceed: false,
-        message: `You've reached your limit of ${creationLimit} total creations. ${profile.subscription_status === 'free' ? 'Upgrade to Pro for more!' : 'You are already on Pro plan.'}`,
+        message: `Daily limit of ${dailyLimit} creations reached. ${profile.subscription_status === 'free' ? 'Upgrade for more!' : 'Try again tomorrow!'}`,
         remainingUses: 0
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Increment total creations used
+    // Increment usage count
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
-        total_creations_used: currentUsage + 1,
+        request_count_today: currentUsage + 1,
         updated_at: new Date().toISOString()
       })
       .eq('id', userId);
@@ -65,8 +65,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       canProceed: true,
-      remainingUses: creationLimit - (currentUsage + 1),
-      message: 'Creation tracked successfully'
+      remainingUses: dailyLimit - (currentUsage + 1),
+      message: 'Usage tracked successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

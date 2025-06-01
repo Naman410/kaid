@@ -1,153 +1,169 @@
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sparkles, Music, Image, BookOpen, Users, Award, Settings, LogOut } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Card } from '@/components/ui/card';
 import MusicZone from '@/components/creative/MusicZone';
 import ImageZone from '@/components/creative/ImageZone';
 import StoryTreehouse from '@/components/creative/StoryTreehouse';
 import LearningTracksHub from '@/components/learning/LearningTracksHub';
-import ParentDashboard from '@/components/parent/ParentDashboard';
 import ProgressTracker from '@/components/shared/ProgressTracker';
 import UsageControl from '@/components/shared/UsageControl';
+import ParentDashboard from '@/components/parent/ParentDashboard';
 import PaymentPage from '@/components/payment/PaymentPage';
 
 interface MainHubProps {
-  userProfile: any;
+  userProfile: { name: string; avatar: string } | null;
 }
 
 const MainHub = ({ userProfile }: MainHubProps) => {
-  const { signOut } = useAuth();
-  const [activeZone, setActiveZone] = useState<'music' | 'image' | 'story' | 'learning' | 'parent' | 'payment'>('music');
+  const [currentView, setCurrentView] = useState('hub');
 
-  const handleSignOut = async () => {
-    await signOut();
+  const avatarEmojis = {
+    space: '🚀',
+    artist: '🎨', 
+    scientist: '🔬',
+    musician: '🎵',
+    wizard: '🧙‍♀️',
+    robot: '🤖',
   };
 
-  const renderActiveZone = () => {
-    const hasReachedLimit = (userProfile?.total_creations_used || 0) >= (userProfile?.subscription_status === 'premium' ? 50 : 10);
-
-    switch (activeZone) {
+  const renderCurrentView = () => {
+    switch (currentView) {
       case 'music':
-        return <MusicZone isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <MusicZone onBack={() => setCurrentView('hub')} />;
       case 'image':
-        return <ImageZone isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <ImageZone onBack={() => setCurrentView('hub')} />;
       case 'story':
-        return <StoryTreehouse isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <StoryTreehouse onBack={() => setCurrentView('hub')} />;
       case 'learning':
-        return <LearningTracksHub />;
+        return <LearningTracksHub onBack={() => setCurrentView('hub')} />;
       case 'parent':
-        return <ParentDashboard />;
+        return <ParentDashboard onBack={() => setCurrentView('hub')} />;
       case 'payment':
-        return <PaymentPage onClose={() => setActiveZone('music')} />;
+        return <PaymentPage onBack={() => setCurrentView('hub')} />;
       default:
-        return <MusicZone isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return renderHubView();
     }
   };
 
-  const username = userProfile?.username || 'Young Creator';
-
-  return (
+  const renderHubView = () => (
     <div className="min-h-screen p-4 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-white">
-            Hi {username}! 👋
-          </h1>
-          <p className="text-white/80 text-lg">Ready to create something amazing today?</p>
+      <div className="flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+        <div className="flex items-center space-x-3">
+          <div className="text-4xl">
+            {userProfile ? avatarEmojis[userProfile.avatar as keyof typeof avatarEmojis] : '🤖'}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Hi {userProfile?.name || 'Friend'}! 👋
+            </h1>
+            <p className="text-gray-600">Ready for some AI fun?</p>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-            {userProfile?.subscription_status === 'premium' ? '👑 Pro Creator' : '🌟 Free Creator'}
-          </Badge>
+        <div className="flex space-x-2">
           <Button
-            onClick={handleSignOut}
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/20"
+            onClick={() => setCurrentView('parent')}
+            variant="outline"
+            className="rounded-xl"
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
+            👨‍👩‍👧‍👦 Parent
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar Navigation */}
-        <div className="lg:col-span-1 space-y-4">
-          <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-4">
-              <h3 className="font-bold text-gray-800 mb-4 text-center">🎨 Creative Zones</h3>
-              <div className="space-y-2">
-                <Button
-                  onClick={() => setActiveZone('music')}
-                  variant={activeZone === 'music' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                >
-                  <Music className="w-4 h-4 mr-2" />
-                  Music Studio
-                </Button>
-                <Button
-                  onClick={() => setActiveZone('image')}
-                  variant={activeZone === 'image' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                >
-                  <Image className="w-4 h-4 mr-2" />
-                  Art Gallery
-                </Button>
-                <Button
-                  onClick={() => setActiveZone('story')}
-                  variant={activeZone === 'story' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Story Treehouse
-                </Button>
-              </div>
-            </CardContent>
+      {/* Progress and Usage */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ProgressTracker />
+        <UsageControl onUpgrade={() => setCurrentView('payment')} />
+      </div>
+
+      {/* Creative Zones */}
+      <div>
+        <h2 className="text-4xl font-bold text-gray-800 mb-6 text-center">
+          🎨 Creative AI Zones 🎨
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card 
+            className="p-8 bg-gradient-to-br from-yellow-200 to-orange-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            onClick={() => setCurrentView('music')}
+          >
+            <div className="text-center space-y-4">
+              <div className="text-8xl">🎵</div>
+              <h3 className="text-2xl font-bold text-gray-800">Sound Cave</h3>
+              <p className="text-lg text-gray-600">Create amazing music with AI!</p>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-lg py-3">
+                Make Music! 🎶
+              </Button>
+            </div>
           </Card>
 
-          <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-4">
-              <h3 className="font-bold text-gray-800 mb-4 text-center">📚 Learning & More</h3>
-              <div className="space-y-2">
-                <Button
-                  onClick={() => setActiveZone('learning')}
-                  variant={activeZone === 'learning' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Learning Hub
-                </Button>
-                <Button
-                  onClick={() => setActiveZone('parent')}
-                  variant={activeZone === 'parent' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Parent Zone
-                </Button>
-              </div>
-            </CardContent>
+          <Card 
+            className="p-8 bg-gradient-to-br from-green-200 to-blue-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            onClick={() => setCurrentView('image')}
+          >
+            <div className="text-center space-y-4">
+              <div className="text-8xl">🎨</div>
+              <h3 className="text-2xl font-bold text-gray-800">Art Studio</h3>
+              <p className="text-lg text-gray-600">Generate beautiful pictures!</p>
+              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-lg py-3">
+                Create Art! 🖼️
+              </Button>
+            </div>
           </Card>
 
-          <UsageControl onUpgrade={() => setActiveZone('payment')} />
-        </div>
-
-        {/* Main Content Area */}
-        <div className="lg:col-span-2">
-          {renderActiveZone()}
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="lg:col-span-1">
-          <ProgressTracker />
+          <Card 
+            className="p-8 bg-gradient-to-br from-pink-200 to-purple-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            onClick={() => setCurrentView('story')}
+          >
+            <div className="text-center space-y-4">
+              <div className="text-8xl">📚</div>
+              <h3 className="text-2xl font-bold text-gray-800">Story Treehouse</h3>
+              <p className="text-lg text-gray-600">Write magical stories together!</p>
+              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-lg py-3">
+                Tell Stories! 📖
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
+
+      {/* Learning Tracks */}
+      <Card className="p-6 bg-gradient-to-r from-indigo-100 to-cyan-100 border-0 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="text-6xl">🎓</div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800">Learning Adventures</h3>
+              <p className="text-gray-600">Discover how AI works through fun lessons!</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setCurrentView('learning')}
+            className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white px-6 py-3 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
+          >
+            Start Learning! 🚀
+          </Button>
+        </div>
+      </Card>
+
+      {/* Future Features Placeholder */}
+      <Card className="p-6 bg-gradient-to-r from-gray-100 to-gray-200 border-0 rounded-2xl shadow-lg opacity-75">
+        <div className="text-center space-y-3">
+          <div className="text-6xl">🐾</div>
+          <h3 className="text-xl font-bold text-gray-600">Train-a-Pet</h3>
+          <p className="text-gray-500">Coming Soon! 💤</p>
+          <Button disabled className="bg-gray-400 text-white rounded-xl">
+            Under Construction 🚧
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300">
+      {renderCurrentView()}
     </div>
   );
 };
