@@ -33,19 +33,25 @@ const DrawingCanvas = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    console.log('Initializing canvas...');
+    
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 800,
       height: 500,
       backgroundColor: '#ffffff',
     });
 
-    // Enable drawing mode first to initialize the brush
+    // Enable drawing mode and wait for initialization
     canvas.isDrawingMode = true;
     
-    // Now we can safely configure the brush
+    console.log('Drawing mode enabled:', canvas.isDrawingMode);
+    console.log('Free drawing brush available:', !!canvas.freeDrawingBrush);
+    
+    // Configure initial brush settings
     if (canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = activeColor;
       canvas.freeDrawingBrush.width = brushSize[0];
+      console.log('Initial brush configured - Color:', activeColor, 'Width:', brushSize[0]);
     }
 
     setFabricCanvas(canvas);
@@ -68,6 +74,15 @@ const DrawingCanvas = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
 
+    // Add event listeners for debugging
+    canvas.on('path:created', (e) => {
+      console.log('Path created:', e);
+    });
+
+    canvas.on('mouse:down', (e) => {
+      console.log('Mouse down on canvas:', e);
+    });
+
     return () => {
       window.removeEventListener('resize', handleResize);
       canvas.dispose();
@@ -75,35 +90,54 @@ const DrawingCanvas = () => {
   }, []);
 
   useEffect(() => {
-    if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
-
-    // Configure brush based on active tool
-    const brush = fabricCanvas.freeDrawingBrush;
-    
-    if (activeTool === 'eraser') {
-      // For eraser, we'll use white color
-      brush.color = '#ffffff';
-      brush.width = brushSize[0];
-    } else {
-      brush.color = activeColor;
-      brush.width = brushSize[0];
-      
-      // Tool-specific configurations
-      switch (activeTool) {
-        case 'crayon':
-          // Rougher, more textured appearance
-          break;
-        case 'pencil':
-          // Thinner, more precise
-          break;
-        case 'brush':
-          // Smooth strokes
-          break;
-        case 'pen':
-          // Clean, precise lines
-          break;
-      }
+    if (!fabricCanvas) {
+      console.log('No fabric canvas available');
+      return;
     }
+
+    console.log('Updating brush settings - Tool:', activeTool, 'Color:', activeColor, 'Size:', brushSize[0]);
+
+    // Ensure drawing mode is always enabled
+    fabricCanvas.isDrawingMode = true;
+    
+    // Wait a tick to ensure brush is available
+    setTimeout(() => {
+      if (fabricCanvas.freeDrawingBrush) {
+        const brush = fabricCanvas.freeDrawingBrush;
+        
+        if (activeTool === 'eraser') {
+          // For eraser, use white color to match canvas background
+          brush.color = '#ffffff';
+          brush.width = brushSize[0];
+          console.log('Eraser configured');
+        } else {
+          brush.color = activeColor;
+          brush.width = brushSize[0];
+          
+          // Tool-specific configurations
+          switch (activeTool) {
+            case 'crayon':
+              // Rougher, more textured appearance
+              break;
+            case 'pencil':
+              // Thinner, more precise
+              break;
+            case 'brush':
+              // Smooth strokes
+              break;
+            case 'pen':
+              // Clean, precise lines
+              break;
+          }
+          console.log(`${activeTool} configured with color:`, activeColor, 'width:', brushSize[0]);
+        }
+        
+        // Force canvas to re-render
+        fabricCanvas.renderAll();
+      } else {
+        console.error('Free drawing brush not available');
+      }
+    }, 0);
   }, [activeTool, brushSize, activeColor, fabricCanvas]);
 
   const handleToolSelect = (tool: DrawingTool) => {
@@ -113,6 +147,7 @@ const DrawingCanvas = () => {
 
   const handleColorSelect = (color: string) => {
     setActiveColor(color);
+    console.log('Selected color:', color);
   };
 
   const handleClearCanvas = () => {
@@ -120,6 +155,7 @@ const DrawingCanvas = () => {
     fabricCanvas.clear();
     fabricCanvas.backgroundColor = '#ffffff';
     fabricCanvas.renderAll();
+    console.log('Canvas cleared');
     toast({
       title: "Canvas Cleared! 🧹",
       description: "Ready for your next masterpiece!"
@@ -140,6 +176,7 @@ const DrawingCanvas = () => {
     link.download = 'my-drawing.png';
     link.click();
     
+    console.log('Drawing downloaded');
     toast({
       title: "Downloaded! 💾",
       description: "Your artwork has been saved!"
