@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
-import DrawingCanvas from './drawing/DrawingCanvas';
 
 interface ImageZoneProps {
   onBack: () => void;
@@ -285,8 +284,29 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
           </div>
         </Card>
 
-        {/* Drawing Canvas Section */}
-        <DrawingCanvas />
+        {/* Plan B: Drawing Tools */}
+        <Card className="p-6 bg-gradient-to-r from-pink-100 to-rose-100 border-0 rounded-2xl shadow-lg">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+            ✏️ Drawing Tools ✏️
+          </h2>
+          <p className="text-center text-gray-600 mb-6">
+            Create your own masterpiece with these tools!
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {['🖍️ Crayon', '✏️ Pencil', '🖌️ Brush', '🖊️ Pen', '🌈 Rainbow', '⭐ Stickers', '🔺 Shapes', '📐 Lines'].map((tool) => (
+              <Button
+                key={tool}
+                variant="outline"
+                className="p-4 h-auto flex flex-col space-y-2 rounded-xl bg-white hover:bg-pink-50 transform hover:scale-105 transition-all duration-200"
+                onClick={() => console.log(`Selected ${tool}`)}
+              >
+                <span className="text-2xl">{tool.split(' ')[0]}</span>
+                <span className="text-sm font-medium">{tool.split(' ')[1]}</span>
+              </Button>
+            ))}
+          </div>
+        </Card>
       </div>
     </div>
   );
