@@ -11,16 +11,15 @@ interface UsageControlProps {
 const UsageControl = ({ onUpgrade }: UsageControlProps) => {
   const { profile } = useAuth();
   
-  // Mock usage data that will be tracked properly in Phase 3
+  // Show lifetime usage data instead of daily
   const [usageData] = useState({
-    dailyLimit: profile?.subscription_status === 'premium' ? 50 : 10,
-    used: profile?.request_count_today || 0,
-    resetTime: '12:00 AM',
+    totalLimit: profile?.subscription_status === 'premium' ? 50 : 10,
+    used: profile?.total_creations_used || 0,
     subscriptionStatus: profile?.subscription_status || 'free'
   });
 
-  const remainingCreations = usageData.dailyLimit - usageData.used;
-  const usagePercentage = (usageData.used / usageData.dailyLimit) * 100;
+  const remainingCreations = Math.max(0, usageData.totalLimit - usageData.used);
+  const usagePercentage = (usageData.used / usageData.totalLimit) * 100;
 
   return (
     <Card className="p-6 bg-gradient-to-br from-orange-100 to-yellow-100 border-0 rounded-2xl shadow-lg">
@@ -35,18 +34,18 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
             {remainingCreations}
           </div>
           <div className="text-lg font-semibold text-gray-700">
-            Creations Left Today!
+            Creations Left Total!
           </div>
           <div className="text-sm text-gray-600">
-            Resets at {usageData.resetTime}
+            Lifetime limit
           </div>
         </div>
 
         {/* Usage Bar */}
         <div className="bg-white rounded-xl p-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold text-gray-700">Today's Usage</span>
-            <span className="text-sm text-gray-600">{usageData.used}/{usageData.dailyLimit}</span>
+            <span className="text-sm font-semibold text-gray-700">Total Usage</span>
+            <span className="text-sm text-gray-600">{usageData.used}/{usageData.totalLimit}</span>
           </div>
           <div className="bg-gray-200 rounded-full h-3">
             <div 
@@ -89,10 +88,10 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
           </div>
         ) : (
           <div className="bg-blue-100 rounded-xl p-4 text-center">
-            <div className="text-2xl mb-2">⏰</div>
+            <div className="text-2xl mb-2">🔒</div>
             <div className="text-sm font-semibold text-blue-800">
               {usageData.subscriptionStatus === 'premium' 
-                ? 'Wow! You\'ve been super creative today!' 
+                ? 'Wow! You\'ve used all your creations!' 
                 : 'Upgrade for unlimited AI fun!'}
             </div>
           </div>
