@@ -27,23 +27,21 @@ const MainHub = ({ userProfile }: MainHubProps) => {
   };
 
   const renderActiveZone = () => {
-    const hasReachedLimit = (userProfile?.total_creations_used || 0) >= (userProfile?.subscription_status === 'premium' ? 50 : 10);
-
     switch (activeZone) {
       case 'music':
-        return <MusicZone isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <MusicZone />;
       case 'image':
-        return <ImageZone isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <ImageZone />;
       case 'story':
-        return <StoryTreehouse isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <StoryTreehouse />;
       case 'learning':
-        return <LearningTracksHub />;
+        return <LearningTracksHub onBack={() => setActiveZone('music')} />;
       case 'parent':
-        return <ParentDashboard />;
+        return <ParentDashboard onBack={() => setActiveZone('music')} />;
       case 'payment':
         return <PaymentPage onClose={() => setActiveZone('music')} />;
       default:
-        return <MusicZone isBlocked={hasReachedLimit} onUpgrade={() => setActiveZone('payment')} />;
+        return <MusicZone />;
     }
   };
 

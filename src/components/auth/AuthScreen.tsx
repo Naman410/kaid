@@ -30,7 +30,6 @@ const AuthScreen = () => {
 
     try {
       if (isLogin) {
-        // Check if user exists first
         const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -38,15 +37,7 @@ const AuthScreen = () => {
 
         if (signInError) {
           if (signInError.message.includes('Invalid login credentials')) {
-            // Check if email exists but wrong password
-            const { data: userData } = await supabase.auth.admin.getUserByEmail(email);
-            if (userData.user) {
-              setError('Wrong password. Please try again.');
-            } else {
-              // Email doesn't exist, redirect to signup with pre-filled data
-              setIsLogin(false);
-              setError('Email not found. Please create an account.');
-            }
+            setError('Invalid email or password. Please try again.');
           } else if (signInError.message.includes('Email not confirmed')) {
             setError('Please verify your email before logging in. Check your inbox for verification link.');
           } else {
@@ -59,19 +50,6 @@ const AuthScreen = () => {
           });
         }
       } else {
-        // Check if email already exists
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', email)
-          .single();
-
-        if (existingUser) {
-          setError('Email already exists. Please log in instead.');
-          setIsLogin(true);
-          return;
-        }
-
         // Sign up new user
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
@@ -85,6 +63,11 @@ const AuthScreen = () => {
         });
 
         if (signUpError) {
+          if (signUpError.message.includes('User already registered')) {
+            setError('Email already exists. Please log in instead.');
+            setIsLogin(true);
+            return;
+          }
           setError(signUpError.message);
         } else {
           setSuccessMessage('Account created! Please check your email for verification link before logging in.');
