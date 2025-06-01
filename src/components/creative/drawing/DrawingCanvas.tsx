@@ -39,10 +39,14 @@ const DrawingCanvas = () => {
       backgroundColor: '#ffffff',
     });
 
-    // Initialize drawing mode
+    // Enable drawing mode first to initialize the brush
     canvas.isDrawingMode = true;
-    canvas.freeDrawingBrush.color = activeColor;
-    canvas.freeDrawingBrush.width = brushSize[0];
+    
+    // Now we can safely configure the brush
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.color = activeColor;
+      canvas.freeDrawingBrush.width = brushSize[0];
+    }
 
     setFabricCanvas(canvas);
 
@@ -71,7 +75,7 @@ const DrawingCanvas = () => {
   }, []);
 
   useEffect(() => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
 
     // Configure brush based on active tool
     const brush = fabricCanvas.freeDrawingBrush;
