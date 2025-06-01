@@ -1,73 +1,71 @@
-# Welcome to your Lovable project
+# ✨ KaiD: AI Adventures for Kids ✨
 
-## Project info
+Welcome to the repository for **KaiD** (Kids' AI Discovery)! This project is currently shared for review purposes.
 
-**URL**: https://lovable.dev/projects/bd9e1f7d-136d-4db7-995d-59134922d186
+KaiD is an interactive web application designed to introduce children (especially those under 10) to the exciting world of Artificial Intelligence through fun, creative, and educational activities. Kids can generate music, create art, write stories, and learn about AI with their friendly AI companion, D.I.A. 🤖
 
-## How can I edit this code?
+## 🚀 Project Overview
 
-There are several ways of editing your application.
+KaiD provides a safe and engaging platform for young minds to:
+* **Explore AI Creativity:** Generate unique music, images, and stories.
+* **Learn AI Concepts:** Understand basic AI principles through interactive lessons and quizzes.
+* **Chat with D.I.A.:** Interact with a kid-friendly AI assistant.
+* **Track Progress:** See their learning journey and achievements.
 
-**Use Lovable**
+## 🛠️ Technologies Used
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bd9e1f7d-136d-4db7-995d-59134922d186) and start prompting.
+This project is built with a modern and robust tech stack:
+* **Vite**: Next-generation front-end tooling.
+* **TypeScript**: JavaScript with syntax for types.
+* **React**: A JavaScript library for building user interfaces.
+* **shadcn-ui**: Beautifully designed components.
+* **Tailwind CSS**: A utility-first CSS framework.
+* **Supabase**: Backend-as-a-Service for database, authentication, and serverless functions.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 💻 Getting Started (For Reviewers)
 
-**Use your preferred IDE**
+To review or run the project locally:
+* **Prerequisites**: Node.js & npm installed ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)).
+* **Steps**:
+    ```sh
+    # Step 1: Clone the repository
+    git clone <REPOSITORY_URL> # Replace <REPOSITORY_URL> with the URL of this Git repository
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+    # Step 2: Navigate to the project directory
+    cd kaid-project-directory # Or your chosen project name
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+    # Step 3: Install the necessary dependencies
+    npm i
 
-Follow these steps:
+    # Step 4: Start the development server
+    npm run dev
+    ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## ✨ Key Features
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+* **User Authentication**: Secure sign-up and login (email/password & Google OAuth).
+* **AI Creative Zones**:
+    * 🎵 **MusicZone (Sound Cave)**: Generate AI music.
+    * 🎨 **ImageZone (Art Studio)**: Create AI images.
+    * 📚 **StoryTreehouse**: Write collaborative AI stories.
+* **DIA Chat**: Interactive AI assistant for kids.
+* **Content & Usage Limits**: Lifetime creation limits for free users and daily DIA chat limits.
+* **Profile Management**: Customizable user profiles with avatars.
+* **Learning Center**: Interactive lessons and progress tracking.
+* **Parent Dashboard**: Overview of child's activity and progress.
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 📄 Code Structure Highlights
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/bd9e1f7d-136d-4db7-995d-59134922d186) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+* **`src/components`**: Contains reusable UI components, categorized by feature (auth, creative, dia, hub, learning, onboarding, parent, shared, ui).
+    * `ui/`: Base UI elements from shadcn-ui.
+* **`src/pages`**: Main page components like `Index.tsx` and `NotFound.tsx`.
+* **`src/hooks`**: Custom React hooks, including `useAuth.tsx` for authentication state and `useSupabaseData.tsx` for data fetching.
+* **`src/integrations/supabase`**: Supabase client setup and type definitions.
+* **`supabase/functions`**: Serverless functions for backend logic, including:
+    * `track-usage`: Manages creation limits.
+    * `track-dia-usage`: Manages chat message limits.
+    * `generate-music`, `generate-image`, `generate-story`, `dia-chat`: AI content generation and interaction.
+* **Configuration Files**:
+    * `vite.config.ts`: Vite configuration.
+    * `tailwind.config.ts`: Tailwind CSS setup.
+    * `tsconfig.*.json`: TypeScript configurations.
