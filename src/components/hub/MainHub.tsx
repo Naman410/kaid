@@ -26,14 +26,18 @@ const MainHub = ({ userProfile }: MainHubProps) => {
     await signOut();
   };
 
+  const handleBackToHub = () => {
+    setActiveZone('music');
+  };
+
   const renderActiveZone = () => {
     switch (activeZone) {
       case 'music':
-        return <MusicZone />;
+        return <MusicZone onBack={handleBackToHub} />;
       case 'image':
-        return <ImageZone />;
+        return <ImageZone onBack={handleBackToHub} />;
       case 'story':
-        return <StoryTreehouse />;
+        return <StoryTreehouse onBack={handleBackToHub} />;
       case 'learning':
         return <LearningTracksHub onBack={() => setActiveZone('music')} />;
       case 'parent':
@@ -41,7 +45,7 @@ const MainHub = ({ userProfile }: MainHubProps) => {
       case 'payment':
         return <PaymentPage onClose={() => setActiveZone('music')} />;
       default:
-        return <MusicZone />;
+        return <MusicZone onBack={handleBackToHub} />;
     }
   };
 
