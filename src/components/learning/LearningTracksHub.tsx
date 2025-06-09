@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -11,6 +10,11 @@ interface LearningTracksHubProps {
 }
 
 const LearningTracksHub = ({ onBack }: LearningTracksHubProps) => {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<any | null>(null);
   

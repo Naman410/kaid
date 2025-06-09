@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +13,11 @@ interface ImageZoneProps {
 }
 
 const ImageZone = ({ onBack }: ImageZoneProps) => {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { user } = useAuth();
   const { useSaveCreation } = useSupabaseData();
   const { toast } = useToast();

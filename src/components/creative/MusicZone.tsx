@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
@@ -14,6 +13,11 @@ interface MusicZoneProps {
 }
 
 const MusicZone = ({ onBack }: MusicZoneProps) => {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { useGenerateMusic, useUserMusicCreations } = useSupabaseData();

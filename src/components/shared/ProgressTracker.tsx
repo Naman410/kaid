@@ -2,14 +2,14 @@
 import { Card } from '@/components/ui/card';
 
 const ProgressTracker = () => {
-  // Mock progress data (will be fetched from Supabase in Phase 2)
+  // Reset to zero state - will be connected to real data later
   const progressData = {
-    totalPoints: 475,
+    totalPoints: 0,
     dailyGoal: 100,
-    todayPoints: 85,
-    streak: 3,
-    level: 2,
-    nextLevelPoints: 500
+    todayPoints: 0,
+    streak: 0,
+    level: 1,
+    nextLevelPoints: 100
   };
 
   const progressToNextLevel = (progressData.totalPoints / progressData.nextLevelPoints) * 100;

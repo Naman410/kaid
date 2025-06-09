@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,11 @@ interface StoryPart {
 }
 
 const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { user } = useAuth();
   const { useSaveCreation } = useSupabaseData();
   const { toast } = useToast();
@@ -379,8 +384,8 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
           </div>
         </Card>
 
-        {/* Plan B: Mad Libs Style */}
-        <Card className="p-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-0 rounded-2xl shadow-lg">
+        {/* Mad Libs Section - Updated to Coming Soon style */}
+        <Card className="p-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-0 rounded-2xl shadow-lg opacity-75">
           <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
             🎯 Quick Story Game! 🎯
           </h2>
@@ -398,11 +403,11 @@ const StoryTreehouse = ({ onBack }: StoryTreehouseProps) => {
           </div>
           
           <Button
+            disabled
             variant="outline"
             className="w-full mt-4 rounded-xl bg-white hover:bg-purple-50"
-            onClick={() => console.log('Starting Mad Libs game')}
           >
-            Play Mad Libs! 🎪
+            Coming Soon!
           </Button>
         </Card>
       </div>
