@@ -92,3 +92,6 @@ verify_jwt = true
 
 [functions.track-b2b-usage]
 verify_jwt = true
+
+[functions.teacher-dashboard]
+verify_jwt = true

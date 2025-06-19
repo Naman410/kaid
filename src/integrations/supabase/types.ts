@@ -707,6 +707,22 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      get_student_creations: {
+        Args: {
+          p_teacher_user_id: string
+          p_student_id?: string
+          p_class_id?: string
+        }
+        Returns: Json
+      }
+      get_teacher_classes: {
+        Args: { p_teacher_user_id: string }
+        Returns: Json
+      }
+      get_teacher_students: {
+        Args: { p_teacher_user_id: string; p_class_id?: string }
+        Returns: Json
+      }
       track_b2b_usage: {
         Args: { user_id_param: string }
         Returns: boolean
