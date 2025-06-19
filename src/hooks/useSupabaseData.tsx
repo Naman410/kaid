@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -272,7 +273,7 @@ export const useSupabaseData = () => {
   const useAdminAPI = () => {
     return useMutation({
       mutationFn: async ({ endpoint, data }: { endpoint: string; data?: any }) => {
-        const url = new URL(`${supabase.supabaseUrl}/functions/v1/admin-api`);
+        const url = new URL(`https://dkmdtuwtvuvekzjyopaj.supabase.co/functions/v1/admin-api`);
         url.searchParams.set('endpoint', endpoint);
         
         const response = await fetch(url.toString(), {
