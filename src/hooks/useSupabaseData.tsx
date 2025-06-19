@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -279,7 +278,7 @@ export const useSupabaseData = () => {
         const response = await fetch(url.toString(), {
           method: data ? 'POST' : 'GET',
           headers: {
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrbWR0dXd0dnV2ZWt6anlvcGFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2ODYyMjEsImV4cCI6MjA2NDI2MjIyMX0.r3ya5-xVjqm9QelHD5r_DhsHYIiXz3loA28oMEuRjvY`,
             'Content-Type': 'application/json',
           },
           body: data ? JSON.stringify(data) : undefined,
