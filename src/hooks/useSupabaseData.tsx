@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -269,6 +268,53 @@ export const useSupabaseData = () => {
     });
   };
 
+  // NEW: Admin API functions
+  const useAdminAPI = () => {
+    return useMutation({
+      mutationFn: async ({ endpoint, data }: { endpoint: string; data?: any }) => {
+        const url = new URL(`${supabase.supabaseUrl}/functions/v1/admin-api`);
+        url.searchParams.set('endpoint', endpoint);
+        
+        const response = await fetch(url.toString(), {
+          method: data ? 'POST' : 'GET',
+          headers: {
+            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: data ? JSON.stringify(data) : undefined,
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Admin API request failed');
+        }
+        
+        return response.json();
+      },
+    });
+  };
+
+  // Admin organization registration
+  const useRegisterOrganization = () => {
+    return useMutation({
+      mutationFn: async (organizationData: {
+        organizationName: string;
+        subdomain: string;
+        adminEmail: string;
+        adminName: string;
+        phone?: string;
+        packageType?: string;
+      }) => {
+        const { data, error } = await supabase.functions.invoke('admin-registration', {
+          body: organizationData
+        });
+        
+        if (error) throw error;
+        return data;
+      },
+    });
+  };
+
   return {
     useSiteAssets,
     useLearningTracks,
@@ -285,5 +331,9 @@ export const useSupabaseData = () => {
     useTeacherClasses,
     useTeacherStudents,
     useStudentCreations,
+    
+    // New admin functions
+    useAdminAPI,
+    useRegisterOrganization,
   };
 };

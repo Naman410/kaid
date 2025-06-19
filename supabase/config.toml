@@ -95,3 +95,9 @@ verify_jwt = true
 
 [functions.teacher-dashboard]
 verify_jwt = true
+
+[functions.admin-api]
+verify_jwt = true
+
+[functions.admin-registration]
+verify_jwt = false
