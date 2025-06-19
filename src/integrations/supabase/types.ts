@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      classes: {
+        Row: {
+          created_at: string
+          grade_level: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          grade_level?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          grade_level?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creations: {
         Row: {
           created_at: string | null
@@ -32,6 +80,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      daily_usage_tracking: {
+        Row: {
+          created_at: string
+          creations_count: number
+          date: string
+          id: string
+          organization_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          creations_count?: number
+          date?: string
+          id?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          creations_count?: number
+          date?: string
+          id?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_usage_tracking_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       learning_tracks: {
         Row: {
@@ -133,6 +219,47 @@ export type Database = {
           },
         ]
       }
+      monthly_usage_tracking: {
+        Row: {
+          created_at: string
+          creations_count: number
+          id: string
+          month: number
+          organization_id: string | null
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          creations_count?: number
+          id?: string
+          month: number
+          organization_id?: string | null
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          creations_count?: number
+          id?: string
+          month?: number
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_usage_tracking_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       music_creations: {
         Row: {
           audio_url: string | null
@@ -187,50 +314,110 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          created_at: string
+          daily_limit_per_student: number
+          id: string
+          is_active: boolean
+          monthly_limit_per_student: number
+          name: string
+          package_type: string
+          subdomain: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_limit_per_student?: number
+          id?: string
+          is_active?: boolean
+          monthly_limit_per_student?: number
+          name: string
+          package_type?: string
+          subdomain: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_limit_per_student?: number
+          id?: string
+          is_active?: boolean
+          monthly_limit_per_student?: number
+          name?: string
+          package_type?: string
+          subdomain?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string
+          class_id: string | null
           created_at: string | null
           daily_dia_messages: number | null
           email_verified: boolean | null
           has_seen_intro: boolean
           id: string
           last_dia_reset: string | null
+          organization_id: string | null
           request_count_today: number | null
           subscription_status: string | null
           total_creations_used: number | null
           updated_at: string | null
+          user_type: string | null
           username: string
         }
         Insert: {
           avatar_url: string
+          class_id?: string | null
           created_at?: string | null
           daily_dia_messages?: number | null
           email_verified?: boolean | null
           has_seen_intro?: boolean
           id: string
           last_dia_reset?: string | null
+          organization_id?: string | null
           request_count_today?: number | null
           subscription_status?: string | null
           total_creations_used?: number | null
           updated_at?: string | null
+          user_type?: string | null
           username: string
         }
         Update: {
           avatar_url?: string
+          class_id?: string | null
           created_at?: string | null
           daily_dia_messages?: number | null
           email_verified?: boolean | null
           has_seen_intro?: boolean
           id?: string
           last_dia_reset?: string | null
+          organization_id?: string | null
           request_count_today?: number | null
           subscription_status?: string | null
           total_creations_used?: number | null
           updated_at?: string | null
+          user_type?: string | null
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_questions: {
         Row: {
@@ -338,6 +525,89 @@ export type Database = {
         }
         Relationships: []
       }
+      student_enrollments: {
+        Row: {
+          class_id: string
+          enrolled_at: string
+          id: string
+          is_active: boolean
+          organization_id: string
+          student_id: string
+        }
+        Insert: {
+          class_id: string
+          enrolled_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          student_id: string
+        }
+        Update: {
+          class_id?: string
+          enrolled_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          organization_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teachers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achieved_milestones: {
         Row: {
           achieved_at: string | null
@@ -433,7 +703,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_user_limits: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
+      track_b2b_usage: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

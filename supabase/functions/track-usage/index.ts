@@ -23,10 +23,10 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get current user profile
+    // Get current user profile to determine user type
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('total_creations_used, subscription_status')
+      .select('user_type, organization_id, total_creations_used, subscription_status')
       .eq('id', userId)
       .single();
 
@@ -34,7 +34,38 @@ serve(async (req) => {
       throw new Error('Failed to fetch user profile');
     }
 
-    // Check usage limits - lifetime limit of 10 for free users
+    // Handle B2B users with separate tracking
+    if (profile.user_type === 'b2b_student' && profile.organization_id) {
+      // Use the track_b2b_usage function for B2B users
+      const { error: trackError } = await supabase.rpc('track_b2b_usage', {
+        user_id_param: userId
+      });
+
+      if (trackError) {
+        throw new Error('Failed to track B2B usage');
+      }
+
+      // Check limits using the check_user_limits function
+      const { data: limitCheck, error: limitError } = await supabase.rpc('check_user_limits', {
+        user_id_param: userId
+      });
+
+      if (limitError) {
+        throw new Error('Failed to check user limits');
+      }
+
+      return new Response(JSON.stringify({ 
+        canProceed: limitCheck.canProceed,
+        message: limitCheck.canProceed ? 'Usage tracked successfully' : 'Usage limit reached',
+        userType: 'b2b',
+        dailyRemaining: limitCheck.dailyRemaining,
+        monthlyRemaining: limitCheck.monthlyRemaining
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle B2C users with existing logic (lifetime limit of 10 for free users)
     const totalLimit = profile.subscription_status === 'premium' ? 999999 : 10;
     const currentUsage = profile.total_creations_used || 0;
 
@@ -42,13 +73,14 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         canProceed: false,
         message: `Creation limit of ${totalLimit} reached. ${profile.subscription_status === 'free' ? 'Upgrade for unlimited creations!' : 'Contact support for assistance.'}`,
-        remainingUses: 0
+        remainingUses: 0,
+        userType: 'b2c'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Increment usage count
+    // Increment B2C usage count
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
@@ -61,12 +93,13 @@ serve(async (req) => {
       throw new Error('Failed to update usage count');
     }
 
-    console.log('Usage tracked successfully');
+    console.log('B2C usage tracked successfully');
 
     return new Response(JSON.stringify({ 
       canProceed: true,
       remainingUses: totalLimit - (currentUsage + 1),
-      message: 'Usage tracked successfully'
+      message: 'Usage tracked successfully',
+      userType: 'b2c'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

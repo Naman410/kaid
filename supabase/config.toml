@@ -83,3 +83,12 @@ verify_jwt = true
 
 [functions.track-usage]
 verify_jwt = true
+
+[functions.track-dia-usage]
+verify_jwt = true
+
+[functions.check-user-limits]
+verify_jwt = true
+
+[functions.track-b2b-usage]
+verify_jwt = true

@@ -116,6 +116,20 @@ export const useSupabaseData = () => {
     });
   };
 
+  // Check user limits using new function
+  const useCheckUserLimits = () => {
+    return useMutation({
+      mutationFn: async () => {
+        const { data, error } = await supabase.functions.invoke('check-user-limits', {
+          body: { userId: user?.id }
+        });
+        
+        if (error) throw error;
+        return data;
+      },
+    });
+  };
+
   // Save creation mutation
   const useSaveCreation = () => {
     return useMutation({
@@ -213,5 +227,6 @@ export const useSupabaseData = () => {
     useUserMusicCreations,
     useGenerateMusic,
     useMarkIntroSeen,
+    useCheckUserLimits,
   };
 };
