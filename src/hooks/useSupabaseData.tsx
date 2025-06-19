@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -215,7 +216,7 @@ export const useSupabaseData = () => {
     });
   };
 
-  // NEW: Teacher dashboard functions
+  // Teacher dashboard functions (these were already there)
   const useTeacherClasses = () => {
     return useQuery({
       queryKey: ['teacher-classes', user?.id],
