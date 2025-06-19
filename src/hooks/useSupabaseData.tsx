@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -216,6 +215,59 @@ export const useSupabaseData = () => {
     });
   };
 
+  // NEW: Teacher dashboard functions
+  const useTeacherClasses = () => {
+    return useQuery({
+      queryKey: ['teacher-classes', user?.id],
+      queryFn: async () => {
+        const { data, error } = await supabase.functions.invoke('teacher-dashboard', {
+          body: { endpoint: 'classes' }
+        });
+        
+        if (error) throw error;
+        return data?.data || [];
+      },
+      enabled: !!user?.id,
+    });
+  };
+
+  const useTeacherStudents = (classId?: string) => {
+    return useQuery({
+      queryKey: ['teacher-students', user?.id, classId],
+      queryFn: async () => {
+        const { data, error } = await supabase.functions.invoke('teacher-dashboard', {
+          body: { 
+            endpoint: 'students',
+            classId: classId || null
+          }
+        });
+        
+        if (error) throw error;
+        return data?.data || [];
+      },
+      enabled: !!user?.id,
+    });
+  };
+
+  const useStudentCreations = (studentId?: string, classId?: string) => {
+    return useQuery({
+      queryKey: ['student-creations', user?.id, studentId, classId],
+      queryFn: async () => {
+        const { data, error } = await supabase.functions.invoke('teacher-dashboard', {
+          body: { 
+            endpoint: 'creations',
+            studentId: studentId || null,
+            classId: classId || null
+          }
+        });
+        
+        if (error) throw error;
+        return data?.data || [];
+      },
+      enabled: !!user?.id,
+    });
+  };
+
   return {
     useSiteAssets,
     useLearningTracks,
@@ -228,5 +280,9 @@ export const useSupabaseData = () => {
     useGenerateMusic,
     useMarkIntroSeen,
     useCheckUserLimits,
+    // Teacher dashboard functions
+    useTeacherClasses,
+    useTeacherStudents,
+    useStudentCreations,
   };
 };

@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          actor_user_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action_type: string
+          actor_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action_type?: string
+          actor_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       classes: {
         Row: {
           created_at: string
@@ -316,6 +346,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          admin_email: string | null
           created_at: string
           daily_limit_per_student: number
           id: string
@@ -323,10 +354,13 @@ export type Database = {
           monthly_limit_per_student: number
           name: string
           package_type: string
+          phone: string | null
+          status: string | null
           subdomain: string
           updated_at: string
         }
         Insert: {
+          admin_email?: string | null
           created_at?: string
           daily_limit_per_student?: number
           id?: string
@@ -334,10 +368,13 @@ export type Database = {
           monthly_limit_per_student?: number
           name: string
           package_type?: string
+          phone?: string | null
+          status?: string | null
           subdomain: string
           updated_at?: string
         }
         Update: {
+          admin_email?: string | null
           created_at?: string
           daily_limit_per_student?: number
           id?: string
@@ -345,6 +382,8 @@ export type Database = {
           monthly_limit_per_student?: number
           name?: string
           package_type?: string
+          phone?: string | null
+          status?: string | null
           subdomain?: string
           updated_at?: string
         }
@@ -359,6 +398,7 @@ export type Database = {
           email_verified: boolean | null
           has_seen_intro: boolean
           id: string
+          is_active: boolean | null
           last_dia_reset: string | null
           organization_id: string | null
           request_count_today: number | null
@@ -376,6 +416,7 @@ export type Database = {
           email_verified?: boolean | null
           has_seen_intro?: boolean
           id: string
+          is_active?: boolean | null
           last_dia_reset?: string | null
           organization_id?: string | null
           request_count_today?: number | null
@@ -393,6 +434,7 @@ export type Database = {
           email_verified?: boolean | null
           has_seen_intro?: boolean
           id?: string
+          is_active?: boolean | null
           last_dia_reset?: string | null
           organization_id?: string | null
           request_count_today?: number | null
@@ -707,6 +749,22 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      get_all_organizations: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_organization_analytics: {
+        Args: { p_user_id: string; p_target_org_id: string }
+        Returns: Json
+      }
+      get_organization_details: {
+        Args: { p_user_id: string; p_target_org_id: string }
+        Returns: Json
+      }
+      get_organization_teachers: {
+        Args: { p_user_id: string; p_target_org_id: string }
+        Returns: Json
+      }
       get_student_creations: {
         Args: {
           p_teacher_user_id: string
@@ -722,6 +780,16 @@ export type Database = {
       get_teacher_students: {
         Args: { p_teacher_user_id: string; p_class_id?: string }
         Returns: Json
+      }
+      log_audit_action: {
+        Args: {
+          p_actor_user_id: string
+          p_action_type: string
+          p_target_type: string
+          p_target_id: string
+          p_details?: Json
+        }
+        Returns: boolean
       }
       track_b2b_usage: {
         Args: { user_id_param: string }
