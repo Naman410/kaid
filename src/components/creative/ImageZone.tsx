@@ -8,7 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
-import ImageLibrary from './image/ImageLibrary';
+//import ImageLibrary from './image/ImageLibrary';
+import type { ImageCreation } from './image/ImageLibrary';
 
 interface ImageZoneProps {
   onBack: () => void;
@@ -32,7 +33,8 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
   // Filter image creations
-  const imageCreations = allCreations?.filter(creation => creation.creation_type === 'image') || [];
+  //const imageCreations = allCreations?.filter(creation => creation.creation_type === 'image') || [];
+  const imageCreations = (allCreations?.filter(creation => creation.creation_type === 'image') || []) as ImageCreation[];
 
   // Default style is now pre-selected
   const styles = [
