@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
 import ImageZone from '@/components/creative/ImageZone';
 import MusicZone from '@/components/creative/MusicZone';
 import StoryTreehouse from '@/components/creative/StoryTreehouse';
@@ -28,11 +27,10 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
   const { data: creations } = useUserCreations();
   const markIntroSeenMutation = useMarkIntroSeen();
 
-  // Check if user should see intro
+  // Check if user should see intro - simplified check
   useEffect(() => {
-    if (user && !user.has_seen_intro) {
-      setShowIntro(true);
-    }
+    // For now, don't auto-show intro as we don't have the user profile data structure
+    // This can be enhanced later when the profile system is properly set up
   }, [user]);
 
   const handleIntroComplete = async () => {
@@ -48,12 +46,9 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      // For B2B users, redirect to student login
-      if (user?.user_type?.startsWith('b2b_')) {
-        window.location.href = '/student-login';
-      } else {
-        window.location.href = '/';
-      }
+      // Check if this is a B2B user based on email domain or other criteria
+      // For now, we'll redirect all users to student login as requested
+      window.location.href = '/student-login';
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -64,23 +59,23 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
   }
 
   if (currentView === 'image') {
-    return <ImageZone onBack={() => setCurrentView('hub')} />;
+    return <ImageZone />;
   }
 
   if (currentView === 'music') {
-    return <MusicZone onBack={() => setCurrentView('hub')} />;
+    return <MusicZone />;
   }
 
   if (currentView === 'story') {
-    return <StoryTreehouse onBack={() => setCurrentView('hub')} />;
+    return <StoryTreehouse />;
   }
 
   if (currentView === 'learning') {
-    return <LearningTracksHub onBack={() => setCurrentView('hub')} />;
+    return <LearningTracksHub />;
   }
 
   if (currentView === 'dia') {
-    return <DIAChat onBack={() => setCurrentView('hub')} />;
+    return <DIAChat />;
   }
 
   const totalCreations = creations?.length || 0;
@@ -91,16 +86,12 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300">
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg"
-        >
+        <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg animate-fadeIn">
           <div className="flex items-center space-x-4">
             <div className="text-4xl">🤖</div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                Welcome back, {user?.username || 'Young Creator'}! 👋
+                Welcome back, {user?.email?.split('@')[0] || 'Young Creator'}! 👋
               </h1>
               <p className="text-gray-600">Ready to create something amazing today?</p>
             </div>
@@ -118,15 +109,10 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
               Sign Out
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats Overview */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slideUp">
           <Card className="p-4 bg-white/95 backdrop-blur-sm border-0 rounded-2xl shadow-lg">
             <div className="flex items-center space-x-3">
               <div className="text-3xl">🖼️</div>
@@ -156,14 +142,10 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Learning Adventures Section - Moved Higher */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div className="animate-slideUp">
           <Card className="p-8 bg-gradient-to-r from-green-100 to-blue-100 border-0 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="space-y-3">
@@ -191,15 +173,10 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
               </Button>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Creative Zones */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-slideUp">
           {/* AI Art Studio */}
           <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 cursor-pointer">
             <div className="space-y-4">
@@ -255,14 +232,10 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
               </Button>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Music Zone */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        <div className="animate-slideUp">
           <Card className="p-6 bg-gradient-to-r from-cyan-100 to-blue-100 border-0 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -281,14 +254,10 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
               </Button>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* DIA Chat Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+        <div className="animate-slideUp">
           <Card className="p-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-0 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -306,7 +275,7 @@ const MainHub = ({ onShowPayment }: MainHubProps) => {
               </Button>
             </div>
           </Card>
-        </motion.div>
+        </div>
       </div>
 
       {/* Floating DIA Chat */}
