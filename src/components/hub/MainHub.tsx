@@ -78,6 +78,25 @@ const MainHub = ({ userProfile }: MainHubProps) => {
         <UsageControl onUpgrade={() => setCurrentView('payment')} />
       </div>
 
+      {/* Learning Tracks */}
+      <Card className="p-6 bg-gradient-to-r from-indigo-100 to-cyan-100 border-0 rounded-2xl shadow-lg">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
+            <div className="text-4xl sm:text-6xl">🎓</div>
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Learning Adventures</h3>
+              <p className="text-sm sm:text-base text-gray-600">Discover how AI works through fun lessons!</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setCurrentView('learning')}
+            className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
+          >
+            Start Learning! 🚀
+          </Button>
+        </div>
+      </Card>
+      
       {/* Creative Zones */}
       <div>
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">
@@ -128,25 +147,7 @@ const MainHub = ({ userProfile }: MainHubProps) => {
         </div>
       </div>
 
-      {/* Learning Tracks */}
-      <Card className="p-6 bg-gradient-to-r from-indigo-100 to-cyan-100 border-0 rounded-2xl shadow-lg">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
-            <div className="text-4xl sm:text-6xl">🎓</div>
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Learning Adventures</h3>
-              <p className="text-sm sm:text-base text-gray-600">Discover how AI works through fun lessons!</p>
-            </div>
-          </div>
-          <Button
-            onClick={() => setCurrentView('learning')}
-            className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
-          >
-            Start Learning! 🚀
-          </Button>
-        </div>
-      </Card>
-
+      
       {/* Future Features Placeholder */}
       <Card className="p-6 bg-gradient-to-r from-gray-100 to-gray-200 border-0 rounded-2xl shadow-lg opacity-75">
         <div className="text-center space-y-3">
