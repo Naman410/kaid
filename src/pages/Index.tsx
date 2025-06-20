@@ -50,7 +50,7 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300">
-      <MainHub />
+      <MainHub userProfile={profile} />
       <FloatingDIAChat />
       
       {/* DIA Intro Modal for first-time users */}
