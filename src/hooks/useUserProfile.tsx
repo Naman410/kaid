@@ -35,9 +35,5 @@ export const useUserProfile = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false, // Prevent refetch on tab focus to fix Flaw #1
-    onError: (error) => {
-      console.error('Error in useUserProfile:', error);
-      toast.error('Failed to load profile. Some features may not work correctly.');
-    },
   });
 };

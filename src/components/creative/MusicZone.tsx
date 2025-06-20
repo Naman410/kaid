@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import MusicGenerator from './music/MusicGenerator';
@@ -18,7 +19,8 @@ const MusicZone = ({ onBack }: MusicZoneProps) => {
     window.scrollTo(0, 0);
   }, []);
 
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { data: profile } = useUserProfile();
   const { toast } = useToast();
   const { useGenerateMusic, useUserMusicCreations } = useSupabaseData();
   const generateMusicMutation = useGenerateMusic();
