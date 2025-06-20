@@ -2,10 +2,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { toast } from 'sonner';
 
 export const useSupabaseData = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Enhanced error handling function
+  const handleQueryError = (error: any, context: string) => {
+    console.error(`${context} error:`, error);
+    
+    if (error?.message?.includes('infinite recursion')) {
+      toast.error('Database configuration issue. Please contact support.');
+    } else if (error?.message?.includes('permission denied')) {
+      toast.error('Access denied. You may not have permission to view this data.');
+    } else if (error?.code === 'PGRST301') {
+      toast.error('Multiple records found when expecting one. Please contact support.');
+    } else {
+      toast.error(`Failed to load ${context.toLowerCase()}. Please try again.`);
+    }
+  };
 
   // Fetch site assets
   const useSiteAssets = (usageContext?: string) => {
@@ -23,9 +39,14 @@ export const useSupabaseData = () => {
         
         const { data, error } = await query;
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Site assets');
+          throw error;
+        }
         return data;
       },
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
 
@@ -39,9 +60,14 @@ export const useSupabaseData = () => {
           .select('*')
           .order('order_index');
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Learning tracks');
+          throw error;
+        }
         return data;
       },
+      retry: 2,
+      staleTime: 10 * 60 * 1000, // 10 minutes
     });
   };
 
@@ -56,10 +82,15 @@ export const useSupabaseData = () => {
           .eq('track_id', trackId)
           .order('order_index');
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Lessons');
+          throw error;
+        }
         return data;
       },
       enabled: !!trackId,
+      retry: 2,
+      staleTime: 10 * 60 * 1000,
     });
   };
 
@@ -73,10 +104,15 @@ export const useSupabaseData = () => {
           .select('*')
           .eq('user_id', user?.id);
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'User progress');
+          throw error;
+        }
         return data;
       },
       enabled: !!user?.id,
+      retry: 2,
+      staleTime: 5 * 60 * 1000,
     });
   };
 
@@ -91,10 +127,15 @@ export const useSupabaseData = () => {
           .eq('user_id', user?.id)
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'User creations');
+          throw error;
+        }
         return data;
       },
       enabled: !!user?.id,
+      retry: 2,
+      staleTime: 2 * 60 * 1000, // 2 minutes for fresher data
     });
   };
 
@@ -109,10 +150,15 @@ export const useSupabaseData = () => {
           .eq('user_id', user?.id)
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Music creations');
+          throw error;
+        }
         return data;
       },
       enabled: !!user?.id,
+      retry: 2,
+      staleTime: 2 * 60 * 1000,
     });
   };
 
@@ -124,7 +170,10 @@ export const useSupabaseData = () => {
           body: { userId: user?.id }
         });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'User limits check');
+          throw error;
+        }
         return data;
       },
     });
@@ -134,18 +183,29 @@ export const useSupabaseData = () => {
   const useSaveCreation = () => {
     return useMutation({
       mutationFn: async ({ type, data }: { type: string; data: any }) => {
+        if (!user?.id) {
+          throw new Error('User must be logged in to save creations');
+        }
+
         const { error } = await supabase
           .from('creations')
           .insert({
-            user_id: user?.id,
+            user_id: user.id,
             creation_type: type,
             creation_data: data
           });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Save creation');
+          throw error;
+        }
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user-creations'] });
+        toast.success('Creation saved successfully!');
+      },
+      onError: () => {
+        toast.error('Failed to save creation. Please try again.');
       },
     });
   };
@@ -154,19 +214,27 @@ export const useSupabaseData = () => {
   const useUpdateProgress = () => {
     return useMutation({
       mutationFn: async ({ lessonId, status }: { lessonId: string; status: string }) => {
+        if (!user?.id) {
+          throw new Error('User must be logged in to update progress');
+        }
+
         const { error } = await supabase
           .from('user_lesson_progress')
           .upsert({
-            user_id: user?.id,
+            user_id: user.id,
             lesson_id: lessonId,
             status,
             completed_at: status === 'completed' ? new Date().toISOString() : null
           });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Update progress');
+          throw error;
+        }
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user-progress'] });
+        toast.success('Progress updated!');
       },
     });
   };
@@ -175,12 +243,19 @@ export const useSupabaseData = () => {
   const useMarkIntroSeen = () => {
     return useMutation({
       mutationFn: async () => {
+        if (!user?.id) {
+          throw new Error('User must be logged in');
+        }
+
         const { error } = await supabase
           .from('profiles')
           .update({ has_seen_intro: true })
-          .eq('id', user?.id);
+          .eq('id', user.id);
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Mark intro seen');
+          throw error;
+        }
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -197,26 +272,34 @@ export const useSupabaseData = () => {
         title: string; 
         instrumental: boolean; 
       }) => {
+        if (!user?.id) {
+          throw new Error('User must be logged in to generate music');
+        }
+
         const { data, error } = await supabase.functions.invoke('generate-music', {
           body: {
             prompt,
             style,
             title,
             instrumental,
-            userId: user?.id
+            userId: user.id
           }
         });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Generate music');
+          throw error;
+        }
         return data;
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user-music-creations'] });
+        toast.success('Music generation started!');
       },
     });
   };
 
-  // Teacher dashboard functions
+  // Teacher dashboard functions with enhanced error handling
   const useTeacherClasses = () => {
     return useQuery({
       queryKey: ['teacher-classes', user?.id],
@@ -225,10 +308,15 @@ export const useSupabaseData = () => {
           body: { endpoint: 'classes' }
         });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Teacher classes');
+          throw error;
+        }
         return data?.data || [];
       },
       enabled: !!user?.id,
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
     });
   };
 
@@ -243,10 +331,15 @@ export const useSupabaseData = () => {
           }
         });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Teacher students');
+          throw error;
+        }
         return data?.data || [];
       },
       enabled: !!user?.id,
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
     });
   };
 
@@ -262,10 +355,15 @@ export const useSupabaseData = () => {
           }
         });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Student creations');
+          throw error;
+        }
         return data?.data || [];
       },
       enabled: !!user?.id,
+      retry: 1,
+      staleTime: 2 * 60 * 1000,
     });
   };
 
@@ -299,6 +397,9 @@ export const useSupabaseData = () => {
         
         return response.json();
       },
+      onError: (error) => {
+        handleQueryError(error, 'Admin API');
+      },
     });
   };
 
@@ -317,8 +418,14 @@ export const useSupabaseData = () => {
           body: organizationData
         });
         
-        if (error) throw error;
+        if (error) {
+          handleQueryError(error, 'Organization registration');
+          throw error;
+        }
         return data;
+      },
+      onSuccess: () => {
+        toast.success('Organization registered successfully!');
       },
     });
   };
