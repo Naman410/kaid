@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
 
 const AuthScreen = () => {
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -120,13 +119,13 @@ const AuthScreen = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300 flex items-center justify-center p-4">
-      <Card className="max-w-2xl mx-auto p-8 bg-white/90 backdrop-blur-sm shadow-2xl rounded-3xl border-0">
+      <Card className="w-full max-w-2xl mx-auto p-6 md:p-8 bg-white/90 backdrop-blur-sm shadow-2xl rounded-3xl border-0">
         <div className="text-center space-y-6">
           <div className="relative">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
               KaiD
             </h1>
-            <div className="text-2xl font-medium text-gray-700">
+            <div className="text-xl md:text-2xl font-medium text-gray-700">
               {isSignUp ? 'Join the AI Adventure! 🚀' : 'Welcome Back! 👋'}
             </div>
           </div>
@@ -135,20 +134,20 @@ const AuthScreen = () => {
             {isSignUp && (
               <>
                 <div className="space-y-3">
-                  <label className="text-xl font-bold text-gray-700">
+                  <label className="text-lg md:text-xl font-bold text-gray-700">
                     What's your name?
                   </label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your awesome name!"
-                    className="text-lg p-4 rounded-xl border-2 border-purple-200 focus:border-purple-400 text-center"
+                    className="text-base md:text-lg p-3 md:p-4 rounded-xl border-2 border-purple-200 focus:border-purple-400 text-center"
                     required
                   />
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-xl font-bold text-gray-700">
+                  <label className="text-lg md:text-xl font-bold text-gray-700">
                     Choose Your Avatar!
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -157,14 +156,14 @@ const AuthScreen = () => {
                         key={avatar.id}
                         type="button"
                         onClick={() => setSelectedAvatar(avatar.id)}
-                        className={`p-4 rounded-2xl border-3 transition-all duration-200 transform hover:scale-105 ${
+                        className={`p-3 md:p-4 rounded-2xl border-3 transition-all duration-200 transform hover:scale-105 ${
                           selectedAvatar === avatar.id
                             ? 'border-purple-500 bg-purple-100 scale-105'
                             : 'border-gray-200 bg-white hover:border-purple-300'
                         }`}
                       >
-                        <div className="text-4xl mb-2">{avatar.emoji}</div>
-                        <div className="text-sm font-semibold text-gray-700">
+                        <div className="text-3xl md:text-4xl mb-2">{avatar.emoji}</div>
+                        <div className="text-xs md:text-sm font-semibold text-gray-700">
                           {avatar.name}
                         </div>
                       </button>
@@ -180,7 +179,7 @@ const AuthScreen = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email address"
-                className="text-lg p-4 rounded-xl border-2 border-purple-200 focus:border-purple-400"
+                className="text-base md:text-lg p-3 md:p-4 rounded-xl border-2 border-purple-200 focus:border-purple-400"
                 required
               />
               <div className="relative">
@@ -189,7 +188,7 @@ const AuthScreen = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={isSignUp ? "Choose a strong password" : "Enter your password"}
-                  className="text-lg p-4 rounded-xl border-2 border-purple-200 focus:border-purple-400 pr-12"
+                  className="text-base md:text-lg p-3 md:p-4 rounded-xl border-2 border-purple-200 focus:border-purple-400 pr-12"
                   required
                 />
                 <button
@@ -205,7 +204,7 @@ const AuthScreen = () => {
             <Button 
               type="submit"
               disabled={loading || (isSignUp && (!name.trim() || !selectedAvatar))}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-12 py-6 text-xl font-bold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? 'Loading...' : (isSignUp ? 'Start My Adventure! ✨' : 'Sign In! 🚀')}
             </Button>
@@ -223,7 +222,7 @@ const AuthScreen = () => {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 px-12 py-4 text-lg font-semibold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 px-8 md:px-12 py-3 md:py-4 text-base md:text-lg font-semibold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

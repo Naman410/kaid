@@ -85,7 +85,7 @@ const DIAIntroModal = ({ isOpen, onClose }: DIAIntroModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent 
-        className="max-w-4xl w-full h-auto p-0 bg-white rounded-2xl border-0 shadow-2xl"
+        className="w-[95vw] max-w-4xl h-auto max-h-[95vh] p-0 bg-white rounded-2xl border-0 shadow-2xl overflow-y-auto"
         onPointerDownOutside={handleClose}
       >
         <div className="relative">
@@ -94,33 +94,33 @@ const DIAIntroModal = ({ isOpen, onClose }: DIAIntroModalProps) => {
             onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute top-4 right-4 z-10 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 p-0"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-black/20 hover:bg-black/40 text-white rounded-full w-8 h-8 p-0"
           >
             <X className="w-4 h-4" />
           </Button>
 
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-t-2xl">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 sm:p-6 rounded-t-2xl">
             <div className="text-center space-y-2">
-              <div className="text-6xl">🤖</div>
-              <h2 className="text-3xl font-bold">Meet Your AI Assistant!</h2>
-              <p className="text-lg opacity-90">
+              <div className="text-4xl sm:text-6xl">🤖</div>
+              <h2 className="text-2xl sm:text-3xl font-bold">Meet Your AI Assistant!</h2>
+              <p className="text-sm sm:text-lg opacity-90">
                 Welcome to KaiD! Let's introduce you to D.I.A., your creative companion
               </p>
             </div>
           </div>
 
           {/* Video container */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="relative bg-black rounded-xl overflow-hidden">
               <div id="dia-intro-player" className="w-full aspect-video"></div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-6 pt-0">
+          <div className="p-4 sm:p-6 pt-0">
             <div className="text-center space-y-4">
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 {videoEnded 
                   ? "🎉 Welcome aboard! You're ready to start creating amazing things with D.I.A.!" 
                   : "Watch this quick introduction to get started with your AI journey!"
@@ -128,7 +128,7 @@ const DIAIntroModal = ({ isOpen, onClose }: DIAIntroModalProps) => {
               </p>
               <Button 
                 onClick={handleClose}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-xl font-semibold"
+                className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl font-semibold"
                 disabled={markIntroSeenMutation.isPending}
               >
                 {videoEnded ? "Let's Start Creating! 🚀" : "Close"}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
+import ImageLibrary from './image/ImageLibrary';
 
 interface ImageZoneProps {
   onBack: () => void;
@@ -19,14 +21,18 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
   }, []);
 
   const { user } = useAuth();
-  const { useSaveCreation } = useSupabaseData();
+  const { useSaveCreation, useUserCreations } = useSupabaseData();
   const { toast } = useToast();
   const saveCreation = useSaveCreation();
+  const { data: allCreations } = useUserCreations();
 
   const [prompt, setPrompt] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('cartoon');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+
+  // Filter image creations
+  const imageCreations = allCreations?.filter(creation => creation.creation_type === 'image') || [];
 
   // Default style is now pre-selected
   const styles = [
@@ -130,43 +136,49 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
     }
   };
 
+  const handleSelectLibraryImage = (creation: any) => {
+    setGeneratedImage(creation.creation_data.image_url);
+    setPrompt(creation.creation_data.prompt);
+    setSelectedStyle(creation.creation_data.style);
+  };
+
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-center justify-between bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg gap-4">
           <Button
             onClick={onBack}
             variant="outline"
-            className="rounded-xl"
+            className="rounded-xl order-1 sm:order-none"
           >
             ← Back to Hub
           </Button>
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-800">🎨 Art Studio 🎨</h1>
-            <p className="text-lg text-gray-600">Create beautiful pictures with AI!</p>
+          <div className="text-center order-2 sm:order-none">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">🎨 Art Studio 🎨</h1>
+            <p className="text-base sm:text-lg text-gray-600">Create beautiful pictures with AI!</p>
           </div>
-          <div className="w-24"></div>
+          <div className="w-24 hidden sm:block"></div>
         </div>
 
         {/* Image Generation Interface */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Controls */}
-          <Card className="p-6 bg-gradient-to-br from-green-100 to-blue-100 border-0 rounded-2xl shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <Card className="p-4 sm:p-6 bg-gradient-to-br from-green-100 to-blue-100 border-0 rounded-2xl shadow-lg">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">
               🖼️ AI Image Creator 🖼️
             </h2>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-lg font-semibold text-gray-700 mb-3">
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 mb-3">
                   What do you want to create? 💭
                 </label>
                 <Textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe your amazing picture in detail..."
-                  className="w-full rounded-xl border-2 border-blue-200 focus:border-blue-400 bg-white p-4 text-lg min-h-32 resize-none"
+                  className="w-full rounded-xl border-2 border-blue-200 focus:border-blue-400 bg-white p-3 sm:p-4 text-base sm:text-lg min-h-24 sm:min-h-32 resize-none"
                   maxLength={1000}
                 />
                 <div className="text-xs text-gray-500 mt-1">
@@ -175,7 +187,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
               </div>
 
               <div>
-                <label className="block text-lg font-semibold text-gray-700 mb-3">
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 mb-3">
                   Choose an art style! 🎭
                 </label>
                 <Select value={selectedStyle} onValueChange={setSelectedStyle}>
@@ -195,7 +207,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
               <Button
                 onClick={handleGenerateImage}
                 disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200"
               >
                 {isGenerating ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -210,8 +222,8 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
           </Card>
 
           {/* Generated Image Display */}
-          <Card className="p-6 bg-gradient-to-br from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <Card className="p-4 sm:p-6 bg-gradient-to-br from-purple-100 to-pink-100 border-0 rounded-2xl shadow-lg">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">
               🖼️ Your AI Artwork 🖼️
             </h2>
 
@@ -221,7 +233,7 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                   <img
                     src={generatedImage}
                     alt="AI Generated artwork"
-                    className="w-full h-64 object-cover rounded-xl shadow-lg"
+                    className="w-full h-48 sm:h-64 object-cover rounded-xl shadow-lg"
                   />
                   <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
                     <span className="text-lg">✨</span>
@@ -253,9 +265,9 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 </div>
               </div>
             ) : (
-              <div className="text-center space-y-4 py-12">
-                <div className="text-6xl">🎨</div>
-                <p className="text-lg text-gray-600">
+              <div className="text-center space-y-4 py-8 sm:py-12">
+                <div className="text-4xl sm:text-6xl">🎨</div>
+                <p className="text-base sm:text-lg text-gray-600">
                   Describe what you want to create!
                 </p>
                 <p className="text-sm text-gray-500">
@@ -270,8 +282,8 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
         </div>
 
         {/* Prompt Suggestions */}
-        <Card className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 border-0 rounded-2xl shadow-lg">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-yellow-100 to-orange-100 border-0 rounded-2xl shadow-lg">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center">
             💡 Need Ideas? Try These! 💡
           </h2>
           
@@ -281,13 +293,19 @@ const ImageZone = ({ onBack }: ImageZoneProps) => {
                 key={index}
                 onClick={() => handlePromptSuggestion(suggestion)}
                 variant="outline"
-                className="p-4 h-auto text-left rounded-xl bg-white hover:bg-orange-50 transform hover:scale-105 transition-all duration-200"
+                className="p-3 sm:p-4 h-auto text-left rounded-xl bg-white hover:bg-orange-50 transform hover:scale-105 transition-all duration-200"
               >
-                <span className="text-sm">{suggestion}</span>
+                <span className="text-xs sm:text-sm">{suggestion}</span>
               </Button>
             ))}
           </div>
         </Card>
+
+        {/* Image Library */}
+        <ImageLibrary 
+          imageCreations={imageCreations}
+          onSelectImage={handleSelectLibraryImage}
+        />
       </div>
     </div>
   );

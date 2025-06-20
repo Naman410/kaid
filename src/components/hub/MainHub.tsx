@@ -49,13 +49,13 @@ const MainHub = ({ userProfile }: MainHubProps) => {
   const renderHubView = () => (
     <div className="min-h-screen p-4 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+      <div className="flex flex-col sm:flex-row justify-between items-center bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg gap-4">
         <div className="flex items-center space-x-3">
           <div className="text-4xl">
             {userProfile ? avatarEmojis[userProfile.avatar_url as keyof typeof avatarEmojis] : '🤖'}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
               Hi {userProfile?.username || 'Friend'}! 👋
             </h1>
             <p className="text-gray-600">Ready for some AI fun?</p>
@@ -65,7 +65,7 @@ const MainHub = ({ userProfile }: MainHubProps) => {
           <Button
             onClick={() => setCurrentView('parent')}
             variant="outline"
-            className="rounded-xl"
+            className="rounded-xl text-sm sm:text-base"
           >
             👨‍👩‍👧‍👦 Parent
           </Button>
@@ -80,47 +80,47 @@ const MainHub = ({ userProfile }: MainHubProps) => {
 
       {/* Creative Zones */}
       <div>
-        <h2 className="text-4xl font-bold text-gray-800 mb-6 text-center">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">
           🎨 Creative AI Zones 🎨
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card 
-            className="p-8 bg-gradient-to-br from-yellow-200 to-orange-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            className="p-6 sm:p-8 bg-gradient-to-br from-yellow-200 to-orange-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
             onClick={() => setCurrentView('music')}
           >
             <div className="text-center space-y-4">
-              <div className="text-8xl">🎵</div>
-              <h3 className="text-2xl font-bold text-gray-800">Sound Cave</h3>
-              <p className="text-lg text-gray-600">Create amazing music with AI!</p>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-lg py-3">
+              <div className="text-6xl sm:text-8xl">🎵</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Sound Cave</h3>
+              <p className="text-base sm:text-lg text-gray-600">Create amazing music with AI!</p>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-base sm:text-lg py-2 sm:py-3">
                 Make Music! 🎶
               </Button>
             </div>
           </Card>
 
           <Card 
-            className="p-8 bg-gradient-to-br from-green-200 to-blue-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            className="p-6 sm:p-8 bg-gradient-to-br from-green-200 to-blue-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
             onClick={() => setCurrentView('image')}
           >
             <div className="text-center space-y-4">
-              <div className="text-8xl">🎨</div>
-              <h3 className="text-2xl font-bold text-gray-800">Art Studio</h3>
-              <p className="text-lg text-gray-600">Generate beautiful pictures!</p>
-              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-lg py-3">
+              <div className="text-6xl sm:text-8xl">🎨</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Art Studio</h3>
+              <p className="text-base sm:text-lg text-gray-600">Generate beautiful pictures!</p>
+              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-base sm:text-lg py-2 sm:py-3">
                 Create Art! 🖼️
               </Button>
             </div>
           </Card>
 
           <Card 
-            className="p-8 bg-gradient-to-br from-pink-200 to-purple-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
+            className="p-6 sm:p-8 bg-gradient-to-br from-pink-200 to-purple-200 border-0 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-200"
             onClick={() => setCurrentView('story')}
           >
             <div className="text-center space-y-4">
-              <div className="text-8xl">📚</div>
-              <h3 className="text-2xl font-bold text-gray-800">Story Treehouse</h3>
-              <p className="text-lg text-gray-600">Write magical stories together!</p>
-              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-lg py-3">
+              <div className="text-6xl sm:text-8xl">📚</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Story Treehouse</h3>
+              <p className="text-base sm:text-lg text-gray-600">Write magical stories together!</p>
+              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-base sm:text-lg py-2 sm:py-3">
                 Tell Stories! 📖
               </Button>
             </div>
@@ -130,17 +130,17 @@ const MainHub = ({ userProfile }: MainHubProps) => {
 
       {/* Learning Tracks */}
       <Card className="p-6 bg-gradient-to-r from-indigo-100 to-cyan-100 border-0 rounded-2xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-6xl">🎓</div>
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
+            <div className="text-4xl sm:text-6xl">🎓</div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-800">Learning Adventures</h3>
-              <p className="text-gray-600">Discover how AI works through fun lessons!</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Learning Adventures</h3>
+              <p className="text-sm sm:text-base text-gray-600">Discover how AI works through fun lessons!</p>
             </div>
           </div>
           <Button
             onClick={() => setCurrentView('learning')}
-            className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white px-6 py-3 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
+            className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
           >
             Start Learning! 🚀
           </Button>
@@ -150,10 +150,10 @@ const MainHub = ({ userProfile }: MainHubProps) => {
       {/* Future Features Placeholder */}
       <Card className="p-6 bg-gradient-to-r from-gray-100 to-gray-200 border-0 rounded-2xl shadow-lg opacity-75">
         <div className="text-center space-y-3">
-          <div className="text-6xl">🐾</div>
-          <h3 className="text-xl font-bold text-gray-600">Train-a-Pet</h3>
-          <p className="text-gray-500">Coming Soon! 💤</p>
-          <Button disabled className="bg-gray-400 text-white rounded-xl">
+          <div className="text-4xl sm:text-6xl">🐾</div>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-600">Train-a-Pet</h3>
+          <p className="text-sm sm:text-base text-gray-500">Coming Soon! 💤</p>
+          <Button disabled className="bg-gray-400 text-white rounded-xl text-sm sm:text-base">
             Under Construction 🚧
           </Button>
         </div>
