@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
-  profile: any | null;
   loading: boolean;
   signUp: (email: string, password: string, userData: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -18,17 +17,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const profileTimeout = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn('Profile fetch timeout - setting loading to false');
-        setLoading(false);
-      }
-    }, 10000); // 10 second timeout
 
     // Get initial session
     const initializeAuth = async () => {
@@ -46,11 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (mounted) {
           setUser(session?.user ?? null);
-          if (session?.user) {
-            await fetchProfile(session.user.id);
-          } else {
-            setLoading(false);
-          }
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -62,70 +50,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
 
-    // Listen for auth changes
+    // Listen for auth changes - ONLY handle auth state, not profile data
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.id);
       
       if (!mounted) return;
 
-      if (event === 'SIGNED_OUT' || !session?.user) {
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
-      }
+      // Only update user state - no profile fetching here
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => {
       mounted = false;
-      clearTimeout(profileTimeout);
       subscription.unsubscribe();
     };
   }, []);
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      console.log('Fetching profile for user:', userId);
-      
-      const profileTimeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 8000);
-      });
-
-      const profileQuery = supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      const { data, error } = await Promise.race([profileQuery, profileTimeout]) as any;
-      
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" which is ok
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-      
-      console.log('Profile fetched successfully:', data);
-      setProfile(data);
-    } catch (error) {
-      console.error('Error in fetchProfile:', error);
-      
-      if (error instanceof Error && error.message === 'Profile fetch timeout') {
-        toast.error('Profile loading timed out. Please refresh the page.');
-      } else {
-        toast.error('Failed to load profile. Some features may not work correctly.');
-      }
-      
-      // Don't throw the error, just set profile to null and continue
-      setProfile(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
@@ -216,7 +156,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       user,
-      profile,
       loading,
       signUp,
       signIn,

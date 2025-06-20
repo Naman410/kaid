@@ -2,6 +2,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 interface ParentDashboardProps {
@@ -9,7 +10,8 @@ interface ParentDashboardProps {
 }
 
 const ParentDashboard = ({ onBack }: ParentDashboardProps) => {
-  const { profile, signOut } = useAuth();
+  const { signOut } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { useUserCreations, useUserProgress } = useSupabaseData();
   
   const { data: creations } = useUserCreations();
@@ -21,6 +23,19 @@ const ParentDashboard = ({ onBack }: ParentDashboardProps) => {
 
   // Calculate completed lessons
   const completedLessons = progress?.filter(p => p.status === 'completed').length || 0;
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen p-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[50vh]">
+          <div className="text-center space-y-4">
+            <div className="text-8xl animate-bounce">🤖</div>
+            <div className="text-2xl font-bold text-white">Loading Dashboard...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4">
@@ -99,7 +114,7 @@ const ParentDashboard = ({ onBack }: ParentDashboardProps) => {
                 Account Type: <span className="font-semibold capitalize">{profile?.subscription_status || 'Free'}</span>
               </div>
               <div className="text-lg text-gray-600">
-                Member Since: {new Date(profile?.created_at).toLocaleDateString()}
+                Member Since: {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}
               </div>
             </div>
           </div>

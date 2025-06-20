@@ -1,13 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import AuthScreen from '@/components/auth/AuthScreen';
 import MainHub from '@/components/hub/MainHub';
 import FloatingDIAChat from '@/components/dia/FloatingDIAChat';
 import DIAIntroModal from '@/components/onboarding/DIAIntroModal';
 
 const AppContent = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
   const [showIntroModal, setShowIntroModal] = useState(false);
 
   useEffect(() => {
@@ -17,7 +19,8 @@ const AppContent = () => {
     }
   }, [user, profile]);
 
-  if (loading) {
+  // Show loading while auth is being determined
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300 flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -28,8 +31,21 @@ const AppContent = () => {
     );
   }
 
+  // If not authenticated, show auth screen
   if (!user) {
     return <AuthScreen />;
+  }
+
+  // Show loading while profile is being fetched (but user is authenticated)
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-8xl animate-bounce">🤖</div>
+          <div className="text-2xl font-bold text-white">Loading your profile...</div>
+        </div>
+      </div>
+    );
   }
 
   return (

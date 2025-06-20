@@ -1,8 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 interface UsageControlProps {
@@ -10,40 +10,47 @@ interface UsageControlProps {
 }
 
 const UsageControl = ({ onUpgrade }: UsageControlProps) => {
-  const { profile } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { useCheckUserLimits } = useSupabaseData();
   const checkLimitsMutation = useCheckUserLimits();
-  
-  const [usageData, setUsageData] = useState({
-    totalLimit: profile?.subscription_status === 'premium' ? 999999 : 10,
-    used: profile?.total_creations_used || 0,
-    subscriptionStatus: profile?.subscription_status || 'free',
-    userType: profile?.user_type || 'b2c_student',
-    dailyRemaining: null as number | null,
-    monthlyRemaining: null as number | null,
-    organizationName: null as string | null,
-  });
 
-  // Fetch B2B limits on component mount for B2B users
+  // For B2B users, fetch limits on component mount
   useEffect(() => {
     if (profile?.user_type === 'b2b_student' && profile?.organization_id) {
-      checkLimitsMutation.mutate(undefined, {
-        onSuccess: (data) => {
-          setUsageData(prev => ({
-            ...prev,
-            dailyRemaining: data.dailyRemaining,
-            monthlyRemaining: data.monthlyRemaining,
-            organizationName: data.organizationName,
-          }));
-        },
-      });
+      checkLimitsMutation.mutate();
     }
   }, [profile?.user_type, profile?.organization_id]);
 
-  // For B2C users, use existing logic
-  if (usageData.userType === 'b2c_student' || !profile?.organization_id) {
-    const remainingCreations = usageData.totalLimit - usageData.used;
-    const usagePercentage = (usageData.used / usageData.totalLimit) * 100;
+  // Show loading state while profile is being fetched
+  if (profileLoading) {
+    return (
+      <Card className="p-6 bg-gradient-to-br from-gray-100 to-gray-200 border-0 rounded-2xl shadow-lg">
+        <div className="text-center space-y-4">
+          <div className="text-4xl animate-pulse">🤖</div>
+          <div className="text-lg font-semibold text-gray-600">Loading your progress...</div>
+        </div>
+      </Card>
+    );
+  }
+
+  // If no profile data, show a friendly message
+  if (!profile) {
+    return (
+      <Card className="p-6 bg-gradient-to-br from-orange-100 to-yellow-100 border-0 rounded-2xl shadow-lg">
+        <div className="text-center space-y-4">
+          <div className="text-4xl">⚠️</div>
+          <div className="text-lg font-semibold text-gray-600">Unable to load usage data</div>
+        </div>
+      </Card>
+    );
+  }
+
+  // For B2C users or users without organization
+  if (profile.user_type === 'b2c_student' || !profile.organization_id) {
+    const totalLimit = profile.subscription_status === 'premium' ? 999999 : 10;
+    const used = profile.total_creations_used || 0;
+    const remainingCreations = totalLimit - used;
+    const usagePercentage = (used / totalLimit) * 100;
 
     return (
       <Card className="p-6 bg-gradient-to-br from-orange-100 to-yellow-100 border-0 rounded-2xl shadow-lg">
@@ -55,24 +62,24 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
           {/* Usage Counter */}
           <div className="bg-white rounded-xl p-4 text-center">
             <div className="text-4xl font-bold text-purple-600 mb-2">
-              {usageData.subscriptionStatus === 'premium' ? '∞' : remainingCreations}
+              {profile.subscription_status === 'premium' ? '∞' : remainingCreations}
             </div>
             <div className="text-lg font-semibold text-gray-700">
-              {usageData.subscriptionStatus === 'premium' ? 'Unlimited Creations!' : 'Creations Left!'}
+              {profile.subscription_status === 'premium' ? 'Unlimited Creations!' : 'Creations Left!'}
             </div>
-            {usageData.subscriptionStatus !== 'premium' && (
+            {profile.subscription_status !== 'premium' && (
               <div className="text-sm text-gray-600">
-                Lifetime limit of {usageData.totalLimit}
+                Lifetime limit of {totalLimit}
               </div>
             )}
           </div>
 
           {/* Usage Bar */}
-          {usageData.subscriptionStatus !== 'premium' && (
+          {profile.subscription_status !== 'premium' && (
             <div className="bg-white rounded-xl p-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-gray-700">Lifetime Usage</span>
-                <span className="text-sm text-gray-600">{usageData.used}/{usageData.totalLimit}</span>
+                <span className="text-sm text-gray-600">{used}/{totalLimit}</span>
               </div>
               <div className="bg-gray-200 rounded-full h-3">
                 <div 
@@ -89,13 +96,13 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
               <div>
                 <div className="text-sm font-semibold text-gray-700">Plan</div>
                 <div className="text-lg font-bold text-gray-800 capitalize">
-                  {usageData.subscriptionStatus} 
+                  {profile.subscription_status} 
                   <span className="ml-2">
-                    {usageData.subscriptionStatus === 'free' ? '🌟' : '👑'}
+                    {profile.subscription_status === 'free' ? '🌟' : '👑'}
                   </span>
                 </div>
               </div>
-              {usageData.subscriptionStatus === 'free' && (
+              {profile.subscription_status === 'free' && (
                 <Button
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-4 py-2 text-sm font-bold transform hover:scale-105 transition-all duration-200"
                   onClick={onUpgrade}
@@ -107,7 +114,7 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
           </div>
 
           {/* Fun Encouragement */}
-          {remainingCreations > 0 || usageData.subscriptionStatus === 'premium' ? (
+          {remainingCreations > 0 || profile.subscription_status === 'premium' ? (
             <div className="bg-green-100 rounded-xl p-4 text-center">
               <div className="text-2xl mb-2">🎨</div>
               <div className="text-sm font-semibold text-green-800">
@@ -128,6 +135,10 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
   }
 
   // For B2B users, show daily/monthly limits
+  const dailyRemaining = checkLimitsMutation.data?.dailyRemaining ?? null;
+  const monthlyRemaining = checkLimitsMutation.data?.monthlyRemaining ?? null;
+  const organizationName = checkLimitsMutation.data?.organizationName ?? null;
+
   return (
     <Card className="p-6 bg-gradient-to-br from-blue-100 to-purple-100 border-0 rounded-2xl shadow-lg">
       <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
@@ -138,7 +149,7 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
         {/* Daily Usage Counter */}
         <div className="bg-white rounded-xl p-4 text-center">
           <div className="text-4xl font-bold text-blue-600 mb-2">
-            {usageData.dailyRemaining ?? '...'}
+            {dailyRemaining ?? '...'}
           </div>
           <div className="text-lg font-semibold text-gray-700">
             Creations Left Today!
@@ -151,7 +162,7 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
         {/* Monthly Usage Counter */}
         <div className="bg-white rounded-xl p-4 text-center">
           <div className="text-2xl font-bold text-purple-600 mb-2">
-            {usageData.monthlyRemaining ?? '...'}
+            {monthlyRemaining ?? '...'}
           </div>
           <div className="text-md font-semibold text-gray-700">
             Monthly Creations Left
@@ -162,19 +173,19 @@ const UsageControl = ({ onUpgrade }: UsageControlProps) => {
         </div>
 
         {/* School Info */}
-        {usageData.organizationName && (
+        {organizationName && (
           <div className="bg-white rounded-xl p-4">
             <div className="text-center">
               <div className="text-sm font-semibold text-gray-700">School</div>
               <div className="text-lg font-bold text-gray-800">
-                {usageData.organizationName} 🏫
+                {organizationName} 🏫
               </div>
             </div>
           </div>
         )}
 
         {/* Fun Encouragement */}
-        {(usageData.dailyRemaining ?? 0) > 0 ? (
+        {(dailyRemaining ?? 0) > 0 ? (
           <div className="bg-green-100 rounded-xl p-4 text-center">
             <div className="text-2xl mb-2">🎨</div>
             <div className="text-sm font-semibold text-green-800">
