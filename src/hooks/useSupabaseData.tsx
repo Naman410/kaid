@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -215,7 +216,7 @@ export const useSupabaseData = () => {
     });
   };
 
-  // Teacher dashboard functions (these were already there)
+  // Teacher dashboard functions
   const useTeacherClasses = () => {
     return useQuery({
       queryKey: ['teacher-classes', user?.id],
@@ -268,17 +269,24 @@ export const useSupabaseData = () => {
     });
   };
 
-  // NEW: Admin API functions
+  // Fixed Admin API function with proper authentication
   const useAdminAPI = () => {
     return useMutation({
       mutationFn: async ({ endpoint, data }: { endpoint: string; data?: any }) => {
+        // Get the current session to use the access token
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          throw new Error('No active session');
+        }
+
         const url = new URL(`https://dkmdtuwtvuvekzjyopaj.supabase.co/functions/v1/admin-api`);
         url.searchParams.set('endpoint', endpoint);
         
         const response = await fetch(url.toString(), {
           method: data ? 'POST' : 'GET',
           headers: {
-            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrbWR0dXd0dnV2ZWt6anlvcGFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2ODYyMjEsImV4cCI6MjA2NDI2MjIyMX0.r3ya5-xVjqm9QelHD5r_DhsHYIiXz3loA28oMEuRjvY`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
           body: data ? JSON.stringify(data) : undefined,
@@ -332,7 +340,7 @@ export const useSupabaseData = () => {
     useTeacherStudents,
     useStudentCreations,
     
-    // New admin functions
+    // Admin functions
     useAdminAPI,
     useRegisterOrganization,
   };
