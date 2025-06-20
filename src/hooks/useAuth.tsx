@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Fetching profile for user:', userId);
       
+      // Use maybeSingle() instead of single() to avoid errors when no profile exists
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -65,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // Don't throw the error, just set profile to null
       setProfile(null);
     } finally {
       setLoading(false);
