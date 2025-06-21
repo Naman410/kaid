@@ -6,6 +6,7 @@ import AuthScreen from '@/components/auth/AuthScreen';
 import MainHub from '@/components/hub/MainHub';
 import FloatingDIAChat from '@/components/dia/FloatingDIAChat';
 import DIAIntroModal from '@/components/onboarding/DIAIntroModal';
+import ElevenLabsWidget from '@/components/shared/ElevenLabsWidget';
 
 const AppContent = () => {
   const { user, loading: authLoading } = useAuth();
@@ -50,14 +51,17 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-300">
-    <MainHub userProfile={profile} />
-    {/* <FloatingDIAChat /> */}
+      {/* ElevenLabs Widget - Only show for authenticated users */}
+      {user && <ElevenLabsWidget />}
+      
+      <MainHub userProfile={profile} />
+      {/* <FloatingDIAChat /> */}
 
-    {/* DIA Intro Modal for first-time users */}
-    {/* <DIAIntroModal 
-        isOpen={showIntroModal} 
-        onClose={() => setShowIntroModal(false)} 
-    /> */}
+      {/* DIA Intro Modal for first-time users */}
+      {/* <DIAIntroModal 
+          isOpen={showIntroModal} 
+          onClose={() => setShowIntroModal(false)} 
+      /> */}
     </div>
   );
 };
